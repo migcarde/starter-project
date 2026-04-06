@@ -2,6 +2,15 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    //TODO: WRITE ANY NECESSARY STORAGE RULES HERE
+    
+    // Articles media rules
+    match /media/articles/{allPaths=**} {
+      // Public read access
+      allow read: if true;
+      
+      // Only allow image uploads with size limit (e.g., 5MB)
+      allow write: if request.resource.contentType.matches('image/.*')
+                   && request.resource.size < 5 * 1024 * 1024;
     }
+  }
 }

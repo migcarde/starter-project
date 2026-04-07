@@ -40,12 +40,11 @@ dependencies:
   cloud_firestore: ^4.13.3
   firebase_storage: ^11.5.5
 
-
-  #Hooks
-  flutter_hooks: ^0.18.3
-
   #chached image 
   cached_network_image: ^3.2.0
+
+  # Markdown
+  flutter_markdown_plus: ^1.0.7
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +53,12 @@ dev_dependencies:
   retrofit_generator: ^10.2.3
   froom_generator: ^6.0.0
   build_runner: ^2.4.11
+  bloc_test: any
+  mocktail: any
+  network_image_mock: ^2.1.1
+
+dependency_overrides:
+  analyzer: any
   
 
 flutter:

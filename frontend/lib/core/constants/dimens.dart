@@ -7,4 +7,6 @@ class Dimens {
   static const xxl = 128.0;
   static const cardRadius = 20.0;
   static const screenPaddingHorizontal = 22.0;
+  static const buttonHeight = 46.0;
+  static const buttonPadding = 12.0;
 }

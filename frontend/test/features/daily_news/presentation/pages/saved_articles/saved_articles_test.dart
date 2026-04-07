@@ -8,7 +8,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_state.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_status.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/saved_article/saved_articles.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/saved_articles/saved_articles.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/articles_list.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 

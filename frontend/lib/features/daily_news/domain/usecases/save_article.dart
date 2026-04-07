@@ -9,7 +9,7 @@ class SaveArticleUseCase implements UseCase<DataState<void>, ArticleEntity> {
   SaveArticleUseCase(this._articleRepository);
 
   @override
-  Future<DataState<void>> call({ArticleEntity? params}) async {
+  Future<DataState<void>> call(ArticleEntity params) async {
     // TOOD: Replace with actual implementation
     return const DataSuccess(null);
     // return _articleRepository.saveArticle(params!);

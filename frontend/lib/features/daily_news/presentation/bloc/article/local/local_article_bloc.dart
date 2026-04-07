@@ -1,17 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/core/errors/local_database_exception.dart';
 import 'package:news_app_clean_architecture/core/resources/data_state.dart';
+import 'package:news_app_clean_architecture/core/usecase/usecase.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_state.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_status.dart';
 
-import '../../../../domain/usecases/get_saved_article.dart';
+import '../../../../domain/usecases/get_saved_articles.dart';
 import '../../../../domain/usecases/remove_article.dart';
 import '../../../../domain/usecases/save_article.dart';
 
 class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
-  final GetSavedArticleUseCase _getSavedArticleUseCase;
+  final GetSavedArticlesUseCase _getSavedArticleUseCase;
   final SaveArticleUseCase _saveArticleUseCase;
   final RemoveArticleUseCase _removeArticleUseCase;
 
@@ -25,7 +26,7 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
 
   void onGetSavedArticles(
       GetSavedArticles event, Emitter<LocalArticlesState> emit) async {
-    final dataState = await _getSavedArticleUseCase();
+    final dataState = await _getSavedArticleUseCase(NoParams());
 
     if (dataState is DataSuccess) {
       _emitData(
@@ -40,8 +41,8 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
 
   void onRemoveArticle(
       RemoveArticle removeArticle, Emitter<LocalArticlesState> emit) async {
-    await _removeArticleUseCase(params: removeArticle.article);
-    final articles = await _getSavedArticleUseCase();
+    await _removeArticleUseCase(removeArticle.article!);
+    final articles = await _getSavedArticleUseCase(NoParams());
 
     if (articles is DataSuccess) {
       _emitData(
@@ -63,8 +64,8 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
 
   void onSaveArticle(
       SaveArticle saveArticle, Emitter<LocalArticlesState> emit) async {
-    await _saveArticleUseCase(params: saveArticle.article);
-    final articles = await _getSavedArticleUseCase();
+    await _saveArticleUseCase(saveArticle.article!);
+    final articles = await _getSavedArticleUseCase(NoParams());
 
     if (articles is DataSuccess) {
       _emitData(

@@ -3,10 +3,16 @@ import 'package:dio/dio.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_api_service.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_articles.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
+import 'package:news_app_clean_architecture/features/login/data/repository/user_repository_impl.dart';
+import 'package:news_app_clean_architecture/features/login/domain/repository/user_repository.dart';
+import 'package:news_app_clean_architecture/features/login/domain/usecases/login_stream.dart';
+import 'package:news_app_clean_architecture/features/login/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:news_app_clean_architecture/features/login/domain/usecases/sign_out.dart';
+import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'features/daily_news/data/data_sources/local/app_database.dart';
-import 'features/daily_news/domain/usecases/get_saved_article.dart';
+import 'features/daily_news/domain/usecases/get_saved_articles.dart';
 import 'features/daily_news/domain/usecases/remove_article.dart';
 import 'features/daily_news/domain/usecases/save_article.dart';
 import 'features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
@@ -26,18 +32,35 @@ Future<void> initializeDependencies() async {
 
   sl.registerSingleton<ArticleRepository>(ArticleRepositoryImpl(sl(), sl()));
 
-  //UseCases
-  sl.registerSingleton<GetArticleUseCase>(GetArticleUseCase(sl()));
+  sl.registerSingleton<UserRepository>(UserRepositoryImpl());
 
-  sl.registerSingleton<GetSavedArticleUseCase>(GetSavedArticleUseCase(sl()));
+  //UseCases
+  sl.registerSingleton<GetArticlesUseCase>(GetArticlesUseCase(sl()));
+
+  sl.registerSingleton<GetSavedArticlesUseCase>(GetSavedArticlesUseCase(sl()));
 
   sl.registerSingleton<SaveArticleUseCase>(SaveArticleUseCase(sl()));
 
   sl.registerSingleton<RemoveArticleUseCase>(RemoveArticleUseCase(sl()));
+
+  sl.registerSingleton<LoginStreamUseCase>(LoginStreamUseCase(sl()));
+
+  sl.registerSingleton<SignInWithEmailAndPasswordUseCase>(
+      SignInWithEmailAndPasswordUseCase(sl()));
+
+  sl.registerSingleton<SignOutUseCase>(SignOutUseCase(sl()));
 
   //Blocs
   sl.registerFactory<RemoteArticlesBloc>(() => RemoteArticlesBloc(sl()));
 
   sl.registerFactory<LocalArticleBloc>(
       () => LocalArticleBloc(sl(), sl(), sl()));
+
+  sl.registerFactory<LoginBloc>(
+    () => LoginBloc(
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
 }

@@ -9,7 +9,7 @@ class RemoveArticleUseCase implements UseCase<DataState<void>, ArticleEntity> {
   RemoveArticleUseCase(this._articleRepository);
 
   @override
-  Future<DataState<void>> call({ArticleEntity? params}) async {
+  Future<DataState<void>> call(ArticleEntity params) async {
     // TODO: Replace with actual implementation
     return const DataSuccess(null);
     // return _articleRepository.removeArticle(params!);

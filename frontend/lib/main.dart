@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app_clean_architecture/config/routes/routes.dart';
+import 'package:news_app_clean_architecture/config/routes/go_router_config.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/home/daily_news.dart';
+import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'config/theme/app_themes.dart';
-import 'features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'injection_container.dart';
 
 Future<void> main() async {
@@ -14,18 +13,24 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider<RemoteArticlesBloc>(
-      create: (context) => sl()..add(const GetArticles()),
-      child: MaterialApp(
+    return BlocProvider<LoginBloc>(
+      create: (context) => sl<LoginBloc>(),
+      child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         theme: theme(),
-        onGenerateRoute: AppRoutes.onGenerateRoutes,
-        home: const DailyNews(),
+        routerConfig: GoRouterConfig(navigatorKey: _navigatorKey).routes,
       ),
     );
   }

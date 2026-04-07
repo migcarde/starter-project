@@ -4,6 +4,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:news_app_clean_architecture/core/constants/dimens.dart';
 import 'package:news_app_clean_architecture/core/extensions/context_extensions.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_network_image.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_scaffold.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
@@ -20,8 +21,15 @@ class ArticleDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<LocalArticleBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => sl<LocalArticleBloc>(),
+        ),
+        BlocProvider(
+          create: (context) => sl<RemoteArticlesBloc>(),
+        ),
+      ],
       child: BaseScaffold.withBackNavigation(
         body: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: Dimens.xxl),

@@ -1,8 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app_clean_architecture/core/constants/dimens.dart';
-import '../../domain/entities/article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_network_image.dart';
 
 class ArticleWidget extends StatelessWidget {
   final ArticleEntity article;
@@ -13,13 +12,14 @@ class ArticleWidget extends StatelessWidget {
   static const _heightFactor = 2.2;
   static const _titleMaxLines = 3;
   static const _descriptionMaxLines = 2;
+  static const _widthFactor = 3;
 
   const ArticleWidget({
     Key? key,
     required this.article,
     required this.onRemove,
     required this.onArticlePressed,
-    this.isRemovable = true,
+    required this.isRemovable,
   }) : super(key: key);
 
   @override
@@ -35,7 +35,19 @@ class ArticleWidget extends StatelessWidget {
         height: MediaQuery.sizeOf(context).width / _heightFactor,
         child: Row(
           children: [
-            ArticleTileImage(article: article),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                end: Dimens.m,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(Dimens.cardRadius),
+                child: BaseNetworkImage(
+                  width: MediaQuery.sizeOf(context).width / _widthFactor,
+                  height: double.maxFinite,
+                  imageUrl: article.urlToImage!,
+                ),
+              ),
+            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: Dimens.s),
@@ -84,6 +96,7 @@ class ArticleWidget extends StatelessWidget {
                         child: Text(
                           article.description ?? '',
                           maxLines: _descriptionMaxLines,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -109,70 +122,6 @@ class ArticleWidget extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class ArticleTileImage extends StatelessWidget {
-  const ArticleTileImage({
-    super.key,
-    required this.article,
-  });
-
-  final ArticleEntity? article;
-
-  static const _widthFactor = 3;
-  static const _imageAlpha = 0.08;
-
-  @override
-  Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: article!.urlToImage!,
-      imageBuilder: (context, imageProvider) => Padding(
-        padding: const EdgeInsetsDirectional.only(end: Dimens.m),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(Dimens.cardRadius),
-          child: Container(
-            width: MediaQuery.sizeOf(context).width / _widthFactor,
-            height: double.maxFinite,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: _imageAlpha),
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-      ),
-      progressIndicatorBuilder: (context, url, downloadProgress) => Padding(
-        padding: const EdgeInsetsDirectional.only(end: Dimens.m),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(Dimens.cardRadius),
-          child: Container(
-            width: MediaQuery.sizeOf(context).width / _widthFactor,
-            height: double.maxFinite,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: _imageAlpha),
-            ),
-            child: const CupertinoActivityIndicator(),
-          ),
-        ),
-      ),
-      errorWidget: (context, url, error) => Padding(
-        padding: const EdgeInsetsDirectional.only(end: Dimens.m),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(Dimens.cardRadius),
-          child: Container(
-            width: MediaQuery.sizeOf(context).width / _widthFactor,
-            height: double.maxFinite,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: _imageAlpha),
-            ),
-            child: const Icon(Icons.error),
-          ),
         ),
       ),
     );

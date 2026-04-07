@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
 
-class DailyNewsContent extends StatelessWidget {
-  const DailyNewsContent({
+class ArticlesList extends StatelessWidget {
+  const ArticlesList({
     super.key,
     required this.articles,
+    this.isRemovable = false,
+    this.onRemove,
   });
 
   final List<ArticleEntity> articles;
+  final bool isRemovable;
+  final Function(ArticleEntity)? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +26,17 @@ class DailyNewsContent extends StatelessWidget {
         return RepaintBoundary(
           child: ArticleWidget(
             article: articles[index],
+            isRemovable: isRemovable,
             onArticlePressed: (article) => Navigator.pushNamed(
               context,
               '/ArticleDetails', // TODO: Add named routes
               arguments: article,
             ),
-            onRemove: (article) {},
+            onRemove: (article) {
+              if (isRemovable) {
+                onRemove?.call(article);
+              }
+            },
           ),
         );
       },

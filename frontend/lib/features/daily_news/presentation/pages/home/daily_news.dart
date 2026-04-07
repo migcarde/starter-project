@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/home/screens/daily_news_content.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_scaffold.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/articles_list.dart';
 
 class DailyNews extends StatelessWidget {
   const DailyNews({Key? key}) : super(key: key);
@@ -12,20 +13,15 @@ class DailyNews extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: Add default theme
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Daily News',
-          style: TextStyle(color: Colors.black),
+    return BaseScaffold(
+      text: 'Daily News',
+      actions: [
+        // TODO: Add saved articles functionality
+        IconButton(
+          onPressed: () => Navigator.pushNamed(context, '/SavedArticles'),
+          icon: const Icon(Icons.bookmark, color: Colors.black),
         ),
-        actions: [
-          // TODO: Add saved articles functionality
-          IconButton(
-            onPressed: () => Navigator.pushNamed(context, '/SavedArticles'),
-            icon: const Icon(Icons.bookmark, color: Colors.black),
-          ),
-        ],
-      ),
+      ],
       body: RefreshIndicator(
         onRefresh: () async => context.read<RemoteArticlesBloc>().add(
               const GetArticles(),
@@ -36,7 +32,7 @@ class DailyNews extends StatelessWidget {
               const Center(child: CupertinoActivityIndicator()),
             RemoteArticlesError() => const Center(
                 child: Icon(Icons.refresh)), // TODO: Add a generic error widget
-            RemoteArticlesDone() => DailyNewsContent(
+            RemoteArticlesDone() => ArticlesList(
                 articles: state.articles ?? [],
               ),
             RemoteArticleEmpty() =>

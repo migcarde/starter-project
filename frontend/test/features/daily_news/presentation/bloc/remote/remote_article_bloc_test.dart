@@ -40,7 +40,7 @@ void main() {
   });
 
   const article = ArticleEntity(
-    id: 1,
+    id: '1',
     author: 'John Doe',
     title: 'Test Title',
     description: 'Test Description',

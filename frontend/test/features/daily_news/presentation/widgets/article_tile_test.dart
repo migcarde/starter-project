@@ -4,10 +4,9 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/entities/
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_network_image.dart';
 
-// Create a dummy ArticleEntity for testing
 class DummyArticle extends ArticleEntity {
   const DummyArticle({
-    int? id,
+    String? id,
     String? author,
     String? title,
     String? description,
@@ -30,7 +29,7 @@ class DummyArticle extends ArticleEntity {
 void main() {
   group('ArticleWidget', () {
     const testArticle = DummyArticle(
-      id: 1,
+      id: '1',
       title: 'Test Title',
       description: 'Test Description',
       urlToImage: 'https://example.com/image.jpg',
@@ -67,7 +66,8 @@ void main() {
       expect(find.byIcon(Icons.close), findsNothing);
     });
 
-    testWidgets('calls onArticlePressed when tapped', (WidgetTester tester) async {
+    testWidgets('calls onArticlePressed when tapped',
+        (WidgetTester tester) async {
       bool pressed = false;
       ArticleEntity? pressedArticle;
 
@@ -95,7 +95,9 @@ void main() {
       expect(pressedArticle, testArticle);
     });
 
-    testWidgets('shows remove button and calls onRemove when isRemovable is true', (WidgetTester tester) async {
+    testWidgets(
+        'shows remove button and calls onRemove when isRemovable is true',
+        (WidgetTester tester) async {
       bool removed = false;
       ArticleEntity? removedArticle;
 

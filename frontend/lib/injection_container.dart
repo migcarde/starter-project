@@ -5,8 +5,11 @@ import 'package:news_app_clean_architecture/features/daily_news/data/repository/
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_articles.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
+import 'package:news_app_clean_architecture/features/login/data/data_sources/remote/users_service.dart';
+import 'package:news_app_clean_architecture/features/login/data/data_sources/remote/users_service_impl.dart';
 import 'package:news_app_clean_architecture/features/login/data/repository/user_repository_impl.dart';
 import 'package:news_app_clean_architecture/features/login/domain/repository/user_repository.dart';
+import 'package:news_app_clean_architecture/features/login/domain/usecases/create_user.dart';
 import 'package:news_app_clean_architecture/features/login/domain/usecases/login_stream.dart';
 import 'package:news_app_clean_architecture/features/login/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:news_app_clean_architecture/features/login/domain/usecases/sign_out.dart';
@@ -30,9 +33,11 @@ Future<void> initializeDependencies() async {
   // Dependencies
   sl.registerSingleton<NewsApiService>(NewsApiService(sl()));
 
+  sl.registerSingleton<UsersService>(UserServiceImpl());
+
   sl.registerSingleton<ArticleRepository>(ArticleRepositoryImpl(sl(), sl()));
 
-  sl.registerSingleton<UserRepository>(UserRepositoryImpl());
+  sl.registerSingleton<UserRepository>(UserRepositoryImpl(sl()));
 
   //UseCases
   sl.registerSingleton<GetArticlesUseCase>(GetArticlesUseCase(sl()));
@@ -50,6 +55,8 @@ Future<void> initializeDependencies() async {
 
   sl.registerSingleton<SignOutUseCase>(SignOutUseCase(sl()));
 
+  sl.registerSingleton<CreateUserUseCase>(CreateUserUseCase(sl()));
+
   //Blocs
   sl.registerFactory<RemoteArticlesBloc>(
     () => RemoteArticlesBloc(
@@ -61,8 +68,9 @@ Future<void> initializeDependencies() async {
   sl.registerFactory<LocalArticleBloc>(
       () => LocalArticleBloc(sl(), sl(), sl()));
 
-  sl.registerFactory<LoginBloc>(
+  sl.registerLazySingleton<LoginBloc>(
     () => LoginBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

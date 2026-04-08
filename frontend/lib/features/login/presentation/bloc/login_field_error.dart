@@ -4,6 +4,7 @@ enum LoginFieldError {
   emailAlreadyRegistered,
   passwordRequired,
   passwordNotValid,
+  invalidCredentials,
   unknown;
 
   String get message => switch (this) {
@@ -12,6 +13,7 @@ enum LoginFieldError {
         LoginFieldError.emailAlreadyRegistered => 'Email already registered',
         LoginFieldError.passwordRequired => 'Password is required',
         LoginFieldError.passwordNotValid => 'Password is not valid',
+        LoginFieldError.invalidCredentials => 'Invalid credentials',
         LoginFieldError.unknown => 'Unknown error',
       };
 }
@@ -37,6 +39,9 @@ extension LoginFieldsErrorExtensions on List<LoginFieldError> {
     }
     if (contains(LoginFieldError.passwordNotValid)) {
       return LoginFieldError.passwordNotValid.message;
+    }
+    if (contains(LoginFieldError.invalidCredentials)) {
+      return LoginFieldError.invalidCredentials.message;
     }
     return null;
   }

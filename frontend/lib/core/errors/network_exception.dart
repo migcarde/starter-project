@@ -7,35 +7,7 @@ sealed class NetworkException extends Equatable implements Exception {
 
   const NetworkException({required this.message, this.originalError});
 
-  factory NetworkException.fromDioException(DioException e) {
-    return switch (e.type) {
-      DioExceptionType.connectionTimeout => NetworkTimeoutException(
-          message: "Connection timeout with the server",
-          originalError: e,
-        ),
-      DioExceptionType.sendTimeout => NetworkTimeoutException(
-          message: "Send timeout in connection with the server",
-          originalError: e,
-        ),
-      DioExceptionType.receiveTimeout => NetworkTimeoutException(
-          message: "Receive timeout in connection with the server",
-          originalError: e,
-        ),
-      DioExceptionType.cancel => NetworkCancelException(
-          originalError: e,
-        ),
-      DioExceptionType.connectionError => NetworkNoInternetException(
-          originalError: e,
-        ),
-      DioExceptionType.badResponse => _handleBadResponse(e),
-      _ => NetworkUnknownException(
-          message: "An unexpected network error occurred",
-          originalError: e,
-        ),
-    };
-  }
-
-  static NetworkException _handleBadResponse(DioException e) {
+  static NetworkException handleBadResponse(DioException e) {
     final statusCode = e.response?.statusCode;
 
     return switch (statusCode) {
@@ -46,7 +18,7 @@ sealed class NetworkException extends Equatable implements Exception {
       500 => NetworkServerException(originalError: e),
       502 => NetworkServerException(originalError: e),
       _ => NetworkUnknownException(
-          message: "Server returned an error with status code: $statusCode",
+          message: 'Server returned an error with status code: $statusCode',
           originalError: e,
         ),
     };
@@ -83,6 +55,11 @@ class NetworkNotFoundException extends NetworkException {
 class NetworkBadRequestException extends NetworkException {
   const NetworkBadRequestException({super.originalError})
       : super(message: 'Bad request');
+}
+
+class NetworkConflictException extends NetworkException {
+  const NetworkConflictException({super.originalError})
+      : super(message: 'The resource already exists');
 }
 
 class NetworkServerException extends NetworkException {

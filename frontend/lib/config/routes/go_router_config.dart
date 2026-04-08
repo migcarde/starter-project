@@ -21,15 +21,20 @@ class GoRouterConfig {
         navigatorKey: navigatorKey,
         initialLocation: '/',
         routes: AppRoutes.list,
-        refreshListenable: GoRouterRefreshStream(sl<LoginBloc>().stream),
+        refreshListenable: GoRouterRefreshStream(sl<LoginBloc>()
+            .stream
+            .distinct((prev, curr) => prev.runtimeType == curr.runtimeType)),
         redirect: (context, state) {
           final loginState = context.read<LoginBloc>().state;
 
-          if (loginState is! LoggedIn && state.fullPath != Paths.login.path) {
+          if ((loginState is! LoggedIn && loginState is! LoginInitial) &&
+              !(state.fullPath == Paths.login.path ||
+                  state.fullPath == Paths.register.path)) {
             return Paths.login.path;
           } else if (loginState is LoggedIn &&
               (state.fullPath == Paths.login.path ||
-                  state.fullPath == Paths.initial.path)) {
+                  state.fullPath == Paths.initial.path ||
+                  state.fullPath == Paths.register.path)) {
             return Paths.dailyNews.path;
           } else {
             return null;
@@ -42,7 +47,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
 
   GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
     _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
   }
 

@@ -200,7 +200,6 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
                       });
 
                       final article = ArticleEntity(
-                        id: userState.user.id,
                         author: userState.user.email,
                         title: _titleController.text,
                         description: _articleController.text.substring(

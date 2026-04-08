@@ -27,6 +27,10 @@ class DailyNews extends StatelessWidget {
             onPressed: () => context.pushNamed(Paths.savedArticles.name),
             icon: const Icon(Icons.bookmark, color: Colors.black),
           ),
+          IconButton(
+            onPressed: () => context.read<LoginBloc>().add(SignOutRequested()),
+            icon: const Icon(Icons.logout, color: Colors.black),
+          ),
         ],
         body: RefreshIndicator(
           onRefresh: () async => context.read<RemoteArticlesBloc>().add(

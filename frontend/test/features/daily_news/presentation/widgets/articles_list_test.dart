@@ -28,7 +28,7 @@ class MockLocalArticlesBloc
 
 class DummyArticle extends ArticleEntity {
   const DummyArticle({
-    int? id,
+    String? id,
     String? author,
     String? title,
     String? description,
@@ -79,9 +79,15 @@ void main() {
   group('ArticlesList', () {
     final List<ArticleEntity> mockArticles = [
       const DummyArticle(
-          id: 1, title: 'Article 1', urlToImage: 'url1', publishedAt: 'time1'),
+          id: '1',
+          title: 'Article 1',
+          urlToImage: 'url1',
+          publishedAt: 'time1'),
       const DummyArticle(
-          id: 2, title: 'Article 2', urlToImage: 'url2', publishedAt: 'time2'),
+          id: '2',
+          title: 'Article 2',
+          urlToImage: 'url2',
+          publishedAt: 'time2'),
     ];
 
     testWidgets('renders correct number of ArticleWidgets',
@@ -149,7 +155,7 @@ void main() {
     testWidgets('navigates to ArticleDetails when an article is pressed',
         (WidgetTester tester) async {
       const dummyArticle = DummyArticle(
-        id: 1,
+        id: '1',
         title: 'Article 1',
         urlToImage: 'url1',
         publishedAt: 'time1',

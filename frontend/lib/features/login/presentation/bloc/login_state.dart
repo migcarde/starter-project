@@ -2,12 +2,16 @@ part of 'login_bloc.dart';
 
 @immutable
 sealed class LoginState extends Equatable {
-  final List<LoginFieldError> errors;
+  final List<LoginFieldError> loginErrors;
+  final List<RegisterFieldError> registerErrors;
 
-  const LoginState({this.errors = const []});
+  const LoginState({
+    this.loginErrors = const [],
+    this.registerErrors = const [],
+  });
 
   @override
-  List<Object?> get props => [errors];
+  List<Object?> get props => [loginErrors, registerErrors];
 }
 
 final class LoginInitial extends LoginState {
@@ -16,33 +20,47 @@ final class LoginInitial extends LoginState {
 }
 
 final class LoginLoading extends LoginState {
-  const LoginLoading({super.errors = const []});
+  const LoginLoading({
+    super.loginErrors = const [],
+    super.registerErrors = const [],
+  });
 
   @override
-  List<Object?> get props => [errors];
+  List<Object?> get props => [
+        loginErrors,
+        registerErrors,
+      ];
 }
 
 final class NotLoggedIn extends LoginState {
-  const NotLoggedIn({super.errors});
+  const NotLoggedIn({super.loginErrors, super.registerErrors});
 
   @override
-  List<Object?> get props => [errors];
+  List<Object?> get props => [loginErrors, registerErrors];
 }
 
 final class LoggedIn extends LoginState {
   final UserEntity user;
 
-  const LoggedIn({required this.user, super.errors = const []});
+  const LoggedIn({
+    required this.user,
+    super.loginErrors = const [],
+    super.registerErrors = const [],
+  });
 
   @override
-  List<Object?> get props => [user, errors];
+  List<Object?> get props => [user, loginErrors, registerErrors];
 }
 
 final class LoginError extends LoginState {
   final String message;
 
-  const LoginError({required this.message, super.errors = const []});
+  const LoginError({
+    required this.message,
+    super.loginErrors = const [],
+    super.registerErrors = const [],
+  });
 
   @override
-  List<Object?> get props => [message, errors];
+  List<Object?> get props => [message, loginErrors, registerErrors];
 }

@@ -8,9 +8,6 @@ class SignOutUseCase implements UseCase<DataState<void>, NoParams> {
   SignOutUseCase(this._userRepository);
 
   @override
-  Future<DataState<void>> call(NoParams params) async {
-    // TODO: Replace with repository call
-    return const DataSuccess(null);
-    return await _userRepository.signOut();
-  }
+  Future<DataState<void>> call(NoParams params) async =>
+      _userRepository.signOut();
 }

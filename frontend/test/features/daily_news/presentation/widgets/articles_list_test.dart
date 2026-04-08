@@ -1,8 +1,30 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ionicons/ionicons.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:news_app_clean_architecture/config/routes/paths.dart';
+import 'package:news_app_clean_architecture/config/routes/routes.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_state.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/articles_list.dart';
+
+class MockRemoteArticlesBloc
+    extends MockBloc<RemoteArticlesEvent, RemoteArticlesState>
+    implements RemoteArticlesBloc {}
+
+class MockLocalArticlesBloc
+    extends MockBloc<LocalArticlesEvent, LocalArticlesState>
+    implements LocalArticleBloc {}
 
 class DummyArticle extends ArticleEntity {
   const DummyArticle({
@@ -26,20 +48,34 @@ class DummyArticle extends ArticleEntity {
         );
 }
 
-class MockNavigatorObserver extends NavigatorObserver {
-  String? pushedRouteName;
-  Object? pushedArguments;
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (route.settings.name != null) {
-      pushedRouteName = route.settings.name;
-      pushedArguments = route.settings.arguments;
-    }
-  }
-}
-
 void main() {
+  late MockRemoteArticlesBloc mockRemoteArticlesBloc;
+  late MockLocalArticlesBloc mockLocalArticlesBloc;
+  late GetIt getIt;
+
+  setUp(() {
+    mockRemoteArticlesBloc = MockRemoteArticlesBloc();
+    mockLocalArticlesBloc = MockLocalArticlesBloc();
+    getIt = GetIt.instance;
+    if (getIt.isRegistered<RemoteArticlesBloc>()) {
+      getIt.unregister<RemoteArticlesBloc>();
+    }
+    if (getIt.isRegistered<LocalArticleBloc>()) {
+      getIt.unregister<LocalArticleBloc>();
+    }
+    getIt.registerSingleton<RemoteArticlesBloc>(mockRemoteArticlesBloc);
+    getIt.registerSingleton<LocalArticleBloc>(mockLocalArticlesBloc);
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<RemoteArticlesBloc>()) {
+      getIt.unregister<RemoteArticlesBloc>();
+    }
+    if (getIt.isRegistered<LocalArticleBloc>()) {
+      getIt.unregister<LocalArticleBloc>();
+    }
+  });
+
   group('ArticlesList', () {
     final List<ArticleEntity> mockArticles = [
       const DummyArticle(
@@ -112,30 +148,40 @@ void main() {
 
     testWidgets('navigates to ArticleDetails when an article is pressed',
         (WidgetTester tester) async {
-      final mockObserver = MockNavigatorObserver();
+      const dummyArticle = DummyArticle(
+        id: 1,
+        title: 'Article 1',
+        urlToImage: 'url1',
+        publishedAt: 'time1',
+      );
+
+      when(() => mockRemoteArticlesBloc.state)
+          .thenReturn(const RemoteArticlesDone(articles: [dummyArticle]));
+
+      when(() => mockLocalArticlesBloc.state)
+          .thenReturn(const LocalArticleEmpty());
 
       await tester.pumpWidget(
-        MaterialApp(
-          navigatorObservers: [mockObserver],
-          routes: {
-            '/ArticleDetails': (context) =>
-                const Scaffold(body: Text('Details Page')),
-          },
-          home: Scaffold(
-            body: ArticlesList(
-              articles: mockArticles,
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<RemoteArticlesBloc>.value(
+                value: mockRemoteArticlesBloc),
+            BlocProvider<LocalArticleBloc>.value(value: mockLocalArticlesBloc),
+          ],
+          child: MaterialApp.router(
+            routerConfig: GoRouter(
+              initialLocation: Paths.dailyNews.path,
+              routes: AppRoutes.list,
             ),
           ),
         ),
       );
 
-      final articleWidgets = find.byType(ArticleWidget);
-      await tester.tap(articleWidgets.first);
-      await tester.pumpAndSettle();
+      await tester.tap(find.text('Article 1'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
-      expect(mockObserver.pushedRouteName, '/ArticleDetails');
-      expect(mockObserver.pushedArguments, mockArticles.first);
-      expect(find.text('Details Page'), findsOneWidget);
+      expect(find.byIcon(Ionicons.bookmark), findsOneWidget);
     });
   });
 }

@@ -15,7 +15,7 @@ class SignInWithEmailAndPasswordUseCase
   Future<DataState<UserEntity>> call(
       SignInWithEmailAndPasswordParams params) async {
     // TODO: Replace with real call
-    return DataSuccess(UserEntity(id: '1234', email: 'test@fake.com'));
+    return DataSuccess(UserEntity(id: 1234, email: 'test@fake.com'));
     return _userRepository.signInWithEmailAndPassword(
       email: params.email,
       password: params.password,

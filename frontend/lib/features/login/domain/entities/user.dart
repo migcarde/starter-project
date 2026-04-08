@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class UserEntity extends Equatable {
-  final String id;
+  final int id;
   final String email;
 
   const UserEntity({required this.id, required this.email});

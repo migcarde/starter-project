@@ -49,7 +49,7 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit LoggedIn when user stream returns a user',
         build: () {
-          const mockUser = UserEntity(id: '1', email: 'test@test.com');
+          const mockUser = UserEntity(id: 1, email: 'test@test.com');
 
           when(() => mockLoginStreamUseCase.call(any()))
               .thenAnswer((_) => Stream.value(mockUser));
@@ -63,7 +63,7 @@ void main() {
         },
         expect: () => [
           const LoggedIn(
-            user: UserEntity(id: '1', email: 'test@test.com'),
+            user: UserEntity(id: 1, email: 'test@test.com'),
           ),
         ],
       );
@@ -89,7 +89,7 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit NotLoggedIn initially and then LoggedIn when user logs in',
         build: () {
-          const mockUser = UserEntity(id: '1', email: 'test@test.com');
+          const mockUser = UserEntity(id: 1, email: 'test@test.com');
 
           when(() => mockLoginStreamUseCase.call(any())).thenAnswer(
             (_) => Stream.fromIterable([null, mockUser]),
@@ -105,7 +105,7 @@ void main() {
         expect: () => [
           const NotLoggedIn(),
           const LoggedIn(
-            user: UserEntity(id: '1', email: 'test@test.com'),
+            user: UserEntity(id: 1, email: 'test@test.com'),
           ),
         ],
       );
@@ -262,7 +262,7 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit LoginLoading then LoggedIn when sign in is successful',
         build: () {
-          const mockUser = UserEntity(id: '1', email: 'test@test.com');
+          const mockUser = UserEntity(id: 1, email: 'test@test.com');
 
           when(() => mockLoginStreamUseCase.call(any()))
               .thenAnswer((_) => Stream.value(null));
@@ -287,7 +287,7 @@ void main() {
           const NotLoggedIn(),
           const LoginLoading(),
           const LoggedIn(
-            user: UserEntity(id: '1', email: 'test@test.com'),
+            user: UserEntity(id: 1, email: 'test@test.com'),
           ),
         ],
         verify: (bloc) {
@@ -332,7 +332,7 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit NotLoggedIn when sign out is successful',
         build: () {
-          const mockUser = UserEntity(id: '1', email: 'test@test.com');
+          const mockUser = UserEntity(id: 1, email: 'test@test.com');
 
           when(() => mockLoginStreamUseCase.call(any()))
               .thenAnswer((_) => Stream.value(mockUser));
@@ -350,7 +350,7 @@ void main() {
         act: (bloc) => bloc.add(SignOutRequested()),
         expect: () => [
           const LoggedIn(
-            user: UserEntity(id: '1', email: 'test@test.com'),
+            user: UserEntity(id: 1, email: 'test@test.com'),
           ),
           const NotLoggedIn(),
         ],
@@ -359,7 +359,7 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit LoginError when sign out fails',
         build: () {
-          const mockUser = UserEntity(id: '1', email: 'test@test.com');
+          const mockUser = UserEntity(id: 1, email: 'test@test.com');
 
           when(() => mockLoginStreamUseCase.call(any()))
               .thenAnswer((_) => Stream.value(mockUser));
@@ -378,7 +378,7 @@ void main() {
         act: (bloc) => bloc.add(SignOutRequested()),
         expect: () => [
           const LoggedIn(
-            user: UserEntity(id: '1', email: 'test@test.com'),
+            user: UserEntity(id: 1, email: 'test@test.com'),
           ),
           isA<LoginError>(),
         ],

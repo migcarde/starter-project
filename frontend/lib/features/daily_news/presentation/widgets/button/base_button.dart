@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:news_app_clean_architecture/core/constants/dimens.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/button/button_size.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/button/button_type.dart';
@@ -11,13 +12,16 @@ class BaseButton extends StatelessWidget {
     this.type = ButtonType.normal,
     this.size = ButtonSize.large,
     this.leftIcon,
-  });
+    this.leftSvgPath,
+  }) : assert(leftIcon == null || leftSvgPath == null,
+            'leftIcon and svgPath cannot both be provided');
 
   final String text;
   final VoidCallback onTap;
   final ButtonType type;
   final ButtonSize size;
   final IconData? leftIcon;
+  final String? leftSvgPath;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +53,17 @@ class BaseButton extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: Dimens.s),
                   child: Icon(leftIcon, color: style.textColor),
+                ),
+              if (leftSvgPath != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: Dimens.s),
+                  child: SvgPicture.asset(
+                    leftSvgPath!,
+                    colorFilter: ColorFilter.mode(
+                      style.textColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                 ),
               Text(
                 text,

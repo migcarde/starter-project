@@ -6,16 +6,20 @@ import 'package:news_app_clean_architecture/core/resources/data_state.dart';
 import 'package:news_app_clean_architecture/core/usecase/usecase.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_articles.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/save_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
 
 class MockGetArticleUseCase extends Mock implements GetArticlesUseCase {}
 
+class MockSaveArticleUseCase extends Mock implements SaveArticleUseCase {}
+
 class FakeNoParams extends Fake implements NoParams {}
 
 void main() {
   late MockGetArticleUseCase mockGetArticleUseCase;
+  late MockSaveArticleUseCase mockSaveArticleUseCase;
   late RemoteArticlesBloc remoteArticlesBloc;
 
   setUpAll(() {
@@ -24,7 +28,11 @@ void main() {
 
   setUp(() {
     mockGetArticleUseCase = MockGetArticleUseCase();
-    remoteArticlesBloc = RemoteArticlesBloc(mockGetArticleUseCase);
+    mockSaveArticleUseCase = MockSaveArticleUseCase();
+    remoteArticlesBloc = RemoteArticlesBloc(
+      mockGetArticleUseCase,
+      mockSaveArticleUseCase,
+    );
   });
 
   tearDown(() {
@@ -59,7 +67,7 @@ void main() {
       act: (bloc) => bloc.add(const GetArticles()),
       expect: () => [
         const RemoteArticlesLoading(),
-        const RemoteArticlesDone(articlesList),
+        const RemoteArticlesDone(articles: articlesList),
       ],
       verify: (bloc) {
         verify(() => mockGetArticleUseCase.call(any())).called(1);

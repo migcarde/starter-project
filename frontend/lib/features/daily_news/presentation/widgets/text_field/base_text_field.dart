@@ -29,6 +29,7 @@ class BaseTextField extends StatefulWidget {
     this.prefixText,
     this.textStyle,
     this.maxLines,
+    this.maxLength,
   }) : assert(
           !((textType == BaseTextFieldType.normal ||
                   textType == BaseTextFieldType.password) &&
@@ -50,6 +51,7 @@ class BaseTextField extends StatefulWidget {
   final String? prefixText;
   final TextStyle? textStyle;
   final int? maxLines;
+  final int? maxLength;
 
   @override
   State<BaseTextField> createState() => _BaseTextFieldState();
@@ -83,6 +85,7 @@ class _BaseTextFieldState extends State<BaseTextField> {
       maxLines: widget.textType.isTextArea || widget.textType.isInlineTextArea
           ? widget.maxLines
           : 1,
+      maxLength: widget.maxLength,
       style: widget.textStyle,
       decoration: InputDecoration(
         hintText: widget.hint,

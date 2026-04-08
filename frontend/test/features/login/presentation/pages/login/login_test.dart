@@ -89,11 +89,11 @@ void main() {
   testWidgets('renders login form in LoggedIn state',
       (WidgetTester tester) async {
     when(() => mockLoginBloc.state).thenReturn(
-      const LoggedIn(user: UserEntity(id: '1', email: 'test@test.com')),
+      const LoggedIn(user: UserEntity(id: 1, email: 'test@test.com')),
     );
     when(() => mockLoginBloc.stream).thenAnswer(
       (_) => Stream<LoginState>.value(
-        const LoggedIn(user: UserEntity(id: '1', email: 'test@test.com')),
+        const LoggedIn(user: UserEntity(id: 1, email: 'test@test.com')),
       ),
     );
 

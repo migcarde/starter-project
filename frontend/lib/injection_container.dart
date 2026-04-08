@@ -51,7 +51,12 @@ Future<void> initializeDependencies() async {
   sl.registerSingleton<SignOutUseCase>(SignOutUseCase(sl()));
 
   //Blocs
-  sl.registerFactory<RemoteArticlesBloc>(() => RemoteArticlesBloc(sl()));
+  sl.registerFactory<RemoteArticlesBloc>(
+    () => RemoteArticlesBloc(
+      sl(),
+      sl(),
+    ),
+  );
 
   sl.registerFactory<LocalArticleBloc>(
       () => LocalArticleBloc(sl(), sl(), sl()));

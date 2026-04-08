@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:news_app_clean_architecture/config/routes/paths.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
 
@@ -27,10 +29,9 @@ class ArticlesList extends StatelessWidget {
           child: ArticleWidget(
             article: articles[index],
             isRemovable: isRemovable,
-            onArticlePressed: (article) => Navigator.pushNamed(
-              context,
-              '/ArticleDetails', // TODO: Add named routes
-              arguments: article,
+            onArticlePressed: (article) => context.pushNamed(
+              Paths.articleDetails.name,
+              extra: article,
             ),
             onRemove: (article) {
               if (isRemovable) {

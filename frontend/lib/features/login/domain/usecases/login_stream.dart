@@ -11,7 +11,7 @@ class LoginStreamUseCase {
   Stream<UserEntity?> call(NoParams params) {
     // TODO: Replace with repository call
     return Stream<UserEntity?>.value(const UserEntity(
-      id: '1',
+      id: 1,
       email: 'test@test.com',
     ));
     return _userRepository.loginStream;

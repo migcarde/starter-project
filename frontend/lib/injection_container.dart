@@ -1,9 +1,12 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_api_service.dart';
+import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_service.dart.dart';
+import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_service_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/create_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_articles.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/login/data/data_sources/remote/users_service.dart';
 import 'package:news_app_clean_architecture/features/login/data/data_sources/remote/users_service_impl.dart';
@@ -31,7 +34,7 @@ Future<void> initializeDependencies() async {
   sl.registerSingleton<Dio>(Dio());
 
   // Dependencies
-  sl.registerSingleton<NewsApiService>(NewsApiService(sl()));
+  sl.registerSingleton<NewsService>(NewsServiceImpl());
 
   sl.registerSingleton<UsersService>(UserServiceImpl());
 
@@ -57,6 +60,10 @@ Future<void> initializeDependencies() async {
 
   sl.registerSingleton<CreateUserUseCase>(CreateUserUseCase(sl()));
 
+  sl.registerSingleton<CreateArticleUseCase>(CreateArticleUseCase(sl()));
+
+  sl.registerSingleton<GetSavedArticleUseCase>(GetSavedArticleUseCase(sl()));
+
   //Blocs
   sl.registerFactory<RemoteArticlesBloc>(
     () => RemoteArticlesBloc(
@@ -65,8 +72,12 @@ Future<void> initializeDependencies() async {
     ),
   );
 
-  sl.registerFactory<LocalArticleBloc>(
-      () => LocalArticleBloc(sl(), sl(), sl()));
+  sl.registerLazySingleton<LocalArticleBloc>(() => LocalArticleBloc(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+      ));
 
   sl.registerLazySingleton<LoginBloc>(
     () => LoginBloc(

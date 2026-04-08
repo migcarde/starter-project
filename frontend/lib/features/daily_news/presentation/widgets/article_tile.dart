@@ -44,7 +44,7 @@ class ArticleWidget extends StatelessWidget {
                 child: BaseNetworkImage(
                   width: MediaQuery.sizeOf(context).width / _widthFactor,
                   height: double.maxFinite,
-                  imageUrl: article.urlToImage!,
+                  imageUrl: article.url!,
                 ),
               ),
             ),

@@ -22,3 +22,12 @@ class RemoveArticle extends LocalArticlesEvent {
 class SaveArticle extends LocalArticlesEvent {
   const SaveArticle(ArticleEntity article) : super(article: article);
 }
+
+class GetSavedArticle extends LocalArticlesEvent {
+  final String id;
+
+  const GetSavedArticle(this.id);
+
+  @override
+  List<Object> get props => [id];
+}

@@ -32,26 +32,57 @@ class DailyNews extends StatelessWidget {
             icon: const Icon(Icons.logout, color: Colors.black),
           ),
         ],
-        body: RefreshIndicator(
-          onRefresh: () async => context.read<RemoteArticlesBloc>().add(
-                const GetArticles(),
-              ),
-          child: BlocBuilder<RemoteArticlesBloc, RemoteArticlesState>(
-            builder: (context, state) => switch (state) {
-              RemoteArticlesLoading() =>
-                const Center(child: CupertinoActivityIndicator()),
-              RemoteArticlesError() => const Center(
-                  child:
-                      Icon(Icons.refresh)), // TODO: Add a generic error widget
-              RemoteArticlesDone() => ArticlesList(
-                  articles: state.articles ?? [],
-                ),
-              RemoteArticleEmpty() =>
-                const Center(child: Text('No articles found')),
-            },
-          ),
-        ),
+        body: const _DailyNewsBody(),
         floatingActionButton: const _DailyNewsFloatingButton(),
+      ),
+    );
+  }
+}
+
+class _DailyNewsBody extends StatefulWidget {
+  const _DailyNewsBody();
+
+  @override
+  State<_DailyNewsBody> createState() => _DailyNewsBodyState();
+}
+
+class _DailyNewsBodyState extends State<_DailyNewsBody> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+
+      if (currentScroll >= maxScroll - 200.0) {
+        context.read<RemoteArticlesBloc>().add(const NextPage());
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async => context.read<RemoteArticlesBloc>().add(
+            const GetArticles(),
+          ),
+      child: BlocBuilder<RemoteArticlesBloc, RemoteArticlesState>(
+        builder: (context, state) => switch (state) {
+          RemoteArticlesLoading() =>
+            const Center(child: CupertinoActivityIndicator()),
+          RemoteArticlesError() => const Center(
+              child: Icon(Icons.refresh)), // TODO: Add a generic error widget
+          RemoteArticlesDone() => ArticlesList(
+              scrollController: _scrollController,
+              articles: state.articles ?? [],
+              isLast: state.isLast,
+            ),
+          RemoteArticleEmpty() =>
+            const Center(child: Text('No articles found')),
+        },
       ),
     );
   }
@@ -70,7 +101,11 @@ class _DailyNewsFloatingButton extends FloatingActionButton {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
-            builder: (modalContext) => const PublishArticle(),
+            builder: (modalContext) => PublishArticle(
+              onPublishSuccess: () {
+                context.read<RemoteArticlesBloc>().add(const GetArticles());
+              },
+            ),
           );
         }
       },

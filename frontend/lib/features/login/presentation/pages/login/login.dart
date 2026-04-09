@@ -12,6 +12,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/wid
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_field_error.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -53,9 +54,10 @@ class _LoginViewState extends State<LoginView> {
                   children: [
                     BaseTextField(
                       controller: _emailController,
-                      hint: 'email',
+                      hint: AppLocalizations.of(context).email,
                       type: TextFieldType.outline,
-                      errorText: state.loginErrors.getEmailError,
+                      errorText: state.loginErrors.getEmailError(
+                          localizations: AppLocalizations.of(context)),
                     ),
                     Padding(
                       padding: const EdgeInsetsDirectional.only(
@@ -63,17 +65,18 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       child: BaseTextField(
                         controller: _passwordController,
-                        hint: 'password',
+                        hint: AppLocalizations.of(context).password,
                         textType: BaseTextFieldType.password,
                         type: TextFieldType.outline,
-                        errorText: state.loginErrors.getPasswordError,
+                        errorText: state.loginErrors.getPasswordError(
+                            localizations: AppLocalizations.of(context)),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsetsDirectional.only(top: Dimens.l),
                       child: LoadingButton(
                         isLoading: state is LoginLoading,
-                        text: 'Login',
+                        text: AppLocalizations.of(context).login,
                         onTap: () {
                           context.read<LoginBloc>().add(
                                 SignInWithEmailAndPasswordRequested(
@@ -87,7 +90,7 @@ class _LoginViewState extends State<LoginView> {
                     Padding(
                       padding: const EdgeInsetsDirectional.only(top: Dimens.m),
                       child: BaseButton(
-                        text: 'Register',
+                        text: AppLocalizations.of(context).register,
                         type: ButtonType.alternative,
                         onTap: () => context.pushNamed(Paths.register.name),
                       ),
@@ -95,8 +98,8 @@ class _LoginViewState extends State<LoginView> {
                   ],
                 ),
               ),
-            LoginError() => const Center(
-                child: Text('Something was wrong'),
+            LoginError() => Center(
+                child: Text(AppLocalizations.of(context).something_was_wrong),
               ),
           },
         ),

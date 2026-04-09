@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:news_app_clean_architecture/core/constants/dimens.dart';
+import 'package:news_app_clean_architecture/core/extensions/string_extensions.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_network_image.dart';
 
@@ -68,7 +69,7 @@ class ArticleWidget extends StatelessWidget {
                             style: const TextStyle(
                               fontFamily: 'Butler',
                               fontWeight: FontWeight.w900,
-                              fontSize: 18, //TODO: Replace with theme
+                              fontSize: 18,
                               color: Colors.black87,
                             ),
                           ),
@@ -110,9 +111,10 @@ class ArticleWidget extends StatelessWidget {
                         ),
                         const SizedBox(width: Dimens.s),
                         Text(
-                          article.publishedAt!,
+                          article.publishedAt!
+                              .toFormattedDate(context: context),
                           style: const TextStyle(
-                            fontSize: 12, // TODO: Replace with theme
+                            fontSize: 12,
                           ),
                         ),
                       ],

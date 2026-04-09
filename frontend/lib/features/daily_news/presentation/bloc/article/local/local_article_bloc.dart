@@ -29,6 +29,7 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
     on<RemoveArticle>(onRemoveArticle);
     on<SaveArticle>(onSaveArticle);
     on<GetSavedArticle>(onGetSavedArticle);
+    on<ClearBookmark>(_onClearBookmark);
 
     add(const GetSavedArticles());
   }
@@ -146,15 +147,27 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
 
   Future<void> onGetSavedArticle(
       GetSavedArticle event, Emitter<LocalArticlesState> emit) async {
-    final dataState = await _getSavedArticleUseCase(event.id);
+    if (state is LocalArticlesDone) {
+      final currentState = state as LocalArticlesDone;
+      emit(currentState.clearSave());
+      final dataState = await _getSavedArticleUseCase(event.id);
 
-    if (dataState is DataSuccess) {
-      emit(
-        LocalArticlesDone(
-          articles: state.articles ?? [],
-          isSaved: dataState.data != null,
-        ),
-      );
+      if (dataState is DataSuccess) {
+        emit(
+          LocalArticlesDone(
+            articles: state.articles ?? [],
+            isSaved: dataState.data != null,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _onClearBookmark(
+      ClearBookmark event, Emitter<LocalArticlesState> emit) async {
+    if (state is LocalArticlesDone) {
+      final currentState = state as LocalArticlesDone;
+      emit(currentState.clearSave());
     }
   }
 }

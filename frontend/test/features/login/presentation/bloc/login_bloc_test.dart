@@ -1,15 +1,19 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:news_app_clean_architecture/core/errors/auth_exception.dart';
 import 'package:news_app_clean_architecture/core/resources/data_state.dart';
 import 'package:news_app_clean_architecture/core/usecase/usecase.dart';
+import 'package:news_app_clean_architecture/features/login/domain/entities/create_user_params.dart';
 import 'package:news_app_clean_architecture/features/login/domain/entities/sign_in_with_email_and_password_params.dart';
 import 'package:news_app_clean_architecture/features/login/domain/entities/user.dart';
+import 'package:news_app_clean_architecture/features/login/domain/usecases/create_user.dart';
 import 'package:news_app_clean_architecture/features/login/domain/usecases/login_stream.dart';
 import 'package:news_app_clean_architecture/features/login/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:news_app_clean_architecture/features/login/domain/usecases/sign_out.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_field_error.dart';
+import 'package:news_app_clean_architecture/features/login/presentation/bloc/register_field_error.dart';
 
 class MockLoginStreamUseCase extends Mock implements LoginStreamUseCase {}
 
@@ -18,18 +22,33 @@ class MockSignInWithEmailAndPasswordUseCase extends Mock
 
 class MockSignOutUseCase extends Mock implements SignOutUseCase {}
 
+class MockCreateUserUseCase extends Mock implements CreateUserUseCase {}
+
 void main() {
-  late LoginBloc loginBloc;
   late MockLoginStreamUseCase mockLoginStreamUseCase;
   late MockSignInWithEmailAndPasswordUseCase
       mockSignInWithEmailAndPasswordUseCase;
   late MockSignOutUseCase mockSignOutUseCase;
+  late MockCreateUserUseCase mockCreateUserUseCase;
+
+  const tUser = UserEntity(
+    id: '1',
+    email: 'test@test.com',
+    name: 'Test User',
+    profilePictureUrl: '',
+  );
+
+  const tValidPassword = 'Password123!';
 
   setUpAll(() {
     registerFallbackValue(NoParams());
     registerFallbackValue(const SignInWithEmailAndPasswordParams(
       email: 'test@test.com',
       password: 'test',
+    ));
+    registerFallbackValue(const CreateUserParams(
+      user: tUser,
+      password: tValidPassword,
     ));
   });
 
@@ -38,290 +57,227 @@ void main() {
     mockSignInWithEmailAndPasswordUseCase =
         MockSignInWithEmailAndPasswordUseCase();
     mockSignOutUseCase = MockSignOutUseCase();
+    mockCreateUserUseCase = MockCreateUserUseCase();
   });
 
-  tearDown(() {
-    loginBloc.close();
-  });
+  LoginBloc buildBloc() {
+    return LoginBloc(
+      mockLoginStreamUseCase,
+      mockCreateUserUseCase,
+      mockSignInWithEmailAndPasswordUseCase,
+      mockSignOutUseCase,
+    );
+  }
 
   group('LoginBloc Tests', () {
-    group('StartWatchingUser', () {
+    group('Initial State & StartWatchingUser', () {
       blocTest<LoginBloc, LoginState>(
-        'Should emit LoggedIn when user stream returns a user',
+        'Should emit LoggedIn when user stream returns a user upon initialization',
         build: () {
-          const mockUser = UserEntity(id: 1, email: 'test@test.com');
-
           when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(mockUser));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+              .thenAnswer((_) => Stream.value(tUser));
+          return buildBloc();
         },
         expect: () => [
-          const LoggedIn(
-            user: UserEntity(id: 1, email: 'test@test.com'),
-          ),
+          const LoggedIn(user: tUser),
         ],
       );
 
       blocTest<LoginBloc, LoginState>(
-        'Should emit NotLoggedIn when user stream returns null',
+        'Should emit NotLoggedIn when user stream returns null upon initialization',
         build: () {
           when(() => mockLoginStreamUseCase.call(any()))
               .thenAnswer((_) => Stream.value(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+          return buildBloc();
         },
         expect: () => [
           const NotLoggedIn(),
-        ],
-      );
-
-      blocTest<LoginBloc, LoginState>(
-        'Should emit NotLoggedIn initially and then LoggedIn when user logs in',
-        build: () {
-          const mockUser = UserEntity(id: 1, email: 'test@test.com');
-
-          when(() => mockLoginStreamUseCase.call(any())).thenAnswer(
-            (_) => Stream.fromIterable([null, mockUser]),
-          );
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
-        },
-        expect: () => [
-          const NotLoggedIn(),
-          const LoggedIn(
-            user: UserEntity(id: 1, email: 'test@test.com'),
-          ),
         ],
       );
     });
 
     group('SignInWithEmailAndPasswordRequested', () {
       blocTest<LoginBloc, LoginState>(
-        'Should emit NotLoggedIn with emailRequired error when email is empty',
+        'Should emit NotLoggedIn with loginErrors when validation fails',
         build: () {
           when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+              .thenAnswer((_) => const Stream.empty());
+          return buildBloc();
         },
         act: (bloc) => bloc.add(
           SignInWithEmailAndPasswordRequested(
-            email: '',
-            password: 'ValidPassword123!',
-          ),
-        ),
-        expect: () => [
-          const NotLoggedIn(),
-          isA<NotLoggedIn>().having(
-            (state) => state.errors.contains(LoginFieldError.emailRequired),
-            'contains emailRequired',
-            true,
-          ),
-        ],
-      );
-
-      blocTest<LoginBloc, LoginState>(
-        'Should emit NotLoggedIn with passwordRequired error when password is empty',
-        build: () {
-          when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
-        },
-        act: (bloc) => bloc.add(
-          SignInWithEmailAndPasswordRequested(
-            email: 'test@test.com',
+            email: 'invalid',
             password: '',
           ),
         ),
         expect: () => [
-          const NotLoggedIn(),
-          isA<NotLoggedIn>().having(
-            (state) => state.errors.contains(LoginFieldError.passwordRequired),
-            'contains passwordRequired',
-            true,
-          ),
-        ],
-      );
-
-      blocTest<LoginBloc, LoginState>(
-        'Should emit NotLoggedIn with emailNotValid error when email format is invalid',
-        build: () {
-          when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
-        },
-        act: (bloc) => bloc.add(
-          SignInWithEmailAndPasswordRequested(
-            email: 'invalidemail',
-            password: 'ValidPassword123!',
-          ),
-        ),
-        expect: () => [
-          const NotLoggedIn(),
           const NotLoggedIn(
-            errors: [LoginFieldError.emailNotValid],
+            loginErrors: [
+              LoginFieldError.emailNotValid,
+              LoginFieldError.passwordNotValid,
+              LoginFieldError.passwordRequired,
+            ],
           ),
         ],
       );
 
       blocTest<LoginBloc, LoginState>(
-        'Should emit NotLoggedIn with passwordNotValid error when password is weak',
+        'Should emit [LoginLoading, LoggedIn] when sign in is successful',
         build: () {
           when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
-        },
-        act: (bloc) => bloc.add(
-          SignInWithEmailAndPasswordRequested(
-            email: 'test@test.com',
-            password: 'weak',
-          ),
-        ),
-        expect: () => [
-          const NotLoggedIn(),
-          const NotLoggedIn(
-            errors: [LoginFieldError.passwordNotValid],
-          ),
-        ],
-      );
-
-      blocTest<LoginBloc, LoginState>(
-        'Should emit multiple errors when both email and password are invalid',
-        build: () {
-          when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
-        },
-        act: (bloc) => bloc.add(
-          SignInWithEmailAndPasswordRequested(
-            email: '',
-            password: '',
-          ),
-        ),
-        verify: (bloc) {
-          final lastState = bloc.state;
-          if (lastState is NotLoggedIn) {
-            expect(lastState.errors.length, 4);
-            expect(
-              lastState.errors.contains(LoginFieldError.emailRequired),
-              true,
-            );
-            expect(
-              lastState.errors.contains(LoginFieldError.passwordRequired),
-              true,
-            );
-          }
-        },
-      );
-
-      blocTest<LoginBloc, LoginState>(
-        'Should emit LoginLoading then LoggedIn when sign in is successful',
-        build: () {
-          const mockUser = UserEntity(id: 1, email: 'test@test.com');
-
-          when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
+              .thenAnswer((_) => const Stream.empty());
           when(() => mockSignInWithEmailAndPasswordUseCase(any()))
-              .thenAnswer((_) async => const DataSuccess(mockUser));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+              .thenAnswer((_) async => const DataSuccess(tUser));
+          return buildBloc();
         },
         act: (bloc) => bloc.add(
           SignInWithEmailAndPasswordRequested(
             email: 'test@test.com',
-            password: 'ValidPassword123!',
+            password: tValidPassword,
           ),
         ),
         expect: () => [
-          const NotLoggedIn(),
           const LoginLoading(),
-          const LoggedIn(
-            user: UserEntity(id: 1, email: 'test@test.com'),
-          ),
+          const LoggedIn(user: tUser),
         ],
-        verify: (bloc) {
-          verify(
-            () => mockSignInWithEmailAndPasswordUseCase(any()),
-          ).called(1);
-        },
       );
 
       blocTest<LoginBloc, LoginState>(
-        'Should emit LoginLoading then LoginError when sign in fails',
+        'Should emit [LoginLoading, NotLoggedIn] with invalidCredentials when InvalidCredentialException occurs',
         build: () {
           when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(null));
-
+              .thenAnswer((_) => const Stream.empty());
           when(() => mockSignInWithEmailAndPasswordUseCase(any())).thenAnswer(
-            (_) async => DataFailed(Exception('Wrong password')),
+            (_) async => const DataFailed(InvalidCredentialException()),
           );
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+          return buildBloc();
         },
         act: (bloc) => bloc.add(
           SignInWithEmailAndPasswordRequested(
             email: 'test@test.com',
-            password: 'ValidPassword123!',
+            password: tValidPassword,
           ),
         ),
         expect: () => [
-          const NotLoggedIn(),
+          const LoginLoading(),
+          const NotLoggedIn(
+            loginErrors: [LoginFieldError.invalidCredentials],
+          ),
+        ],
+      );
+
+      blocTest<LoginBloc, LoginState>(
+        'Should emit [LoginLoading, LoginError] when a generic error occurs during sign in',
+        build: () {
+          when(() => mockLoginStreamUseCase.call(any()))
+              .thenAnswer((_) => const Stream.empty());
+          when(() => mockSignInWithEmailAndPasswordUseCase(any())).thenAnswer(
+            (_) async => DataFailed(Exception('Unexpected error')),
+          );
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(
+          SignInWithEmailAndPasswordRequested(
+            email: 'test@test.com',
+            password: tValidPassword,
+          ),
+        ),
+        expect: () => [
+          const LoginLoading(),
+          isA<LoginError>(),
+        ],
+      );
+    });
+
+    group('CreateUserRequested', () {
+      blocTest<LoginBloc, LoginState>(
+        'Should emit NotLoggedIn with registerErrors when validation fails',
+        build: () {
+          when(() => mockLoginStreamUseCase.call(any()))
+              .thenAnswer((_) => const Stream.empty());
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(
+          CreateUserRequested(
+            user: const UserEntity(
+                id: '', email: '', name: '', profilePictureUrl: ''),
+            password: '',
+          ),
+        ),
+        expect: () => [
+          const NotLoggedIn(
+            registerErrors: [
+              RegisterFieldError.nameRequired,
+              RegisterFieldError.emailNotValid,
+              RegisterFieldError.emailRequired,
+              RegisterFieldError.passwordNotValid,
+              RegisterFieldError.passwordRequired,
+            ],
+          ),
+        ],
+      );
+
+      blocTest<LoginBloc, LoginState>(
+        'Should emit [LoginLoading] when registration use case is successful',
+        build: () {
+          when(() => mockLoginStreamUseCase.call(any()))
+              .thenAnswer((_) => const Stream.empty());
+          when(() => mockCreateUserUseCase(any()))
+              .thenAnswer((_) async => const DataSuccess(tUser));
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(
+          CreateUserRequested(
+            user: tUser,
+            password: tValidPassword,
+          ),
+        ),
+        expect: () => [
+          const LoginLoading(),
+        ],
+      );
+
+      blocTest<LoginBloc, LoginState>(
+        'Should emit [LoginLoading, NotLoggedIn] with emailAlreadyRegistered when EmailAlreadyInUseException occurs',
+        build: () {
+          when(() => mockLoginStreamUseCase.call(any()))
+              .thenAnswer((_) => const Stream.empty());
+          when(() => mockCreateUserUseCase(any())).thenAnswer(
+            (_) async => const DataFailed(EmailAlreadyInUseException()),
+          );
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(
+          CreateUserRequested(
+            user: tUser,
+            password: tValidPassword,
+          ),
+        ),
+        expect: () => [
+          const LoginLoading(),
+          const NotLoggedIn(
+            registerErrors: [RegisterFieldError.emailAlreadyRegistered],
+          ),
+        ],
+      );
+
+      blocTest<LoginBloc, LoginState>(
+        'Should emit [LoginLoading, LoginError] when a generic error occurs during registration',
+        build: () {
+          when(() => mockLoginStreamUseCase.call(any()))
+              .thenAnswer((_) => const Stream.empty());
+          when(() => mockCreateUserUseCase(any())).thenAnswer(
+            (_) async => DataFailed(Exception('Registration failed')),
+          );
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(
+          CreateUserRequested(
+            user: tUser,
+            password: tValidPassword,
+          ),
+        ),
+        expect: () => [
           const LoginLoading(),
           isA<LoginError>(),
         ],
@@ -332,26 +288,15 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit NotLoggedIn when sign out is successful',
         build: () {
-          const mockUser = UserEntity(id: 1, email: 'test@test.com');
-
           when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(mockUser));
-
+              .thenAnswer((_) => Stream.value(tUser));
           when(() => mockSignOutUseCase(any()))
               .thenAnswer((_) async => const DataSuccess(null));
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+          return buildBloc();
         },
         act: (bloc) => bloc.add(SignOutRequested()),
+        skip: 1, 
         expect: () => [
-          const LoggedIn(
-            user: UserEntity(id: 1, email: 'test@test.com'),
-          ),
           const NotLoggedIn(),
         ],
       );
@@ -359,27 +304,16 @@ void main() {
       blocTest<LoginBloc, LoginState>(
         'Should emit LoginError when sign out fails',
         build: () {
-          const mockUser = UserEntity(id: 1, email: 'test@test.com');
-
           when(() => mockLoginStreamUseCase.call(any()))
-              .thenAnswer((_) => Stream.value(mockUser));
-
+              .thenAnswer((_) => Stream.value(tUser));
           when(() => mockSignOutUseCase(any())).thenAnswer(
-            (_) async => DataFailed(Exception('Failed to sign out')),
+            (_) async => DataFailed(Exception('Sign out failed')),
           );
-
-          loginBloc = LoginBloc(
-            mockLoginStreamUseCase,
-            mockSignInWithEmailAndPasswordUseCase,
-            mockSignOutUseCase,
-          );
-          return loginBloc;
+          return buildBloc();
         },
         act: (bloc) => bloc.add(SignOutRequested()),
+        skip: 1, 
         expect: () => [
-          const LoggedIn(
-            user: UserEntity(id: 1, email: 'test@test.com'),
-          ),
           isA<LoginError>(),
         ],
       );

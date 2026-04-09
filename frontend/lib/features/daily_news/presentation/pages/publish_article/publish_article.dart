@@ -18,6 +18,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/wid
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/text_field/base_text_field.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 
 class PublishArticle extends StatelessWidget {
   const PublishArticle({
@@ -78,7 +79,7 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
           case RemoteArticleStatus.createdArticleSuccess:
             context.pop();
             context.showSnackBar(
-              message: 'PUBLISHED ARTICLE',
+              message: AppLocalizations.of(context).published_article,
               backgroundColor: Colors.black,
             );
 
@@ -88,7 +89,7 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
           case RemoteArticleStatus.genericError:
             context.pop();
             context.showSnackBar(
-              message: 'GENERIC ERROR',
+              message: AppLocalizations.of(context).generic_error,
               backgroundColor: Colors.red,
             );
 
@@ -110,11 +111,12 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
             children: [
               BaseTextField(
                 controller: _titleController,
-                hint: 'Write your title here...',
-                errorText: _titleIsEmpty ? 'Required field' : null,
+                hint: AppLocalizations.of(context).write_your_title_here,
+                errorText: _titleIsEmpty
+                    ? AppLocalizations.of(context).required_field
+                    : null,
                 maxLength: 100,
               ),
-              // TODO: Use figma SVG for this
               Padding(
                 padding: const EdgeInsets.only(
                   top: Dimens.m,
@@ -123,7 +125,7 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
                   children: [
                     if (_photo == null)
                       BaseButton(
-                        text: 'Attach Image',
+                        text: AppLocalizations.of(context).attach_image,
                         leftSvgPath: 'assets/svgs/camera_plus.svg',
                         size: ButtonSize.small,
                         onTap: () async {
@@ -136,7 +138,7 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
                       ),
                     if (_photoIsEmpty)
                       Text(
-                        'Required field',
+                        AppLocalizations.of(context).required_field,
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: theme.colorScheme.error,
                         ),
@@ -171,20 +173,20 @@ class _PublishArticleBodyState extends State<_PublishArticleBody> {
                 ),
                 child: BaseMarkdownTextField(
                   controller: _articleController,
-                  hint: 'Add article here...',
+                  hint: AppLocalizations.of(context).add_article_here,
                   maxLines: 5,
-                  errorText: _articleIsEmpty ? 'Required field' : null,
+                  errorText: _articleIsEmpty
+                      ? AppLocalizations.of(context).required_field
+                      : null,
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.only(top: Dimens.l),
                 child: LoadingButton(
-                  text: 'Publish article',
+                  text: AppLocalizations.of(context).publish_article,
                   onTap: () {
                     final userState = context.read<LoginBloc>().state;
                     final titleIsEmpty = _titleController.text.isEmpty;
-                    // TODO: Check attached file
                     final articleIsEmpty = _articleController.text.isEmpty;
 
                     if (!_isLoading &&

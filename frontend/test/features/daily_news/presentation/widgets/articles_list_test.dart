@@ -17,6 +17,8 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/articles_list.dart';
+import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 
 class MockRemoteArticlesBloc
     extends MockBloc<RemoteArticlesEvent, RemoteArticlesState>
@@ -26,6 +28,9 @@ class MockLocalArticlesBloc
     extends MockBloc<LocalArticlesEvent, LocalArticlesState>
     implements LocalArticleBloc {}
 
+class MockLoginBloc extends MockBloc<LoginEvent, LoginState>
+    implements LoginBloc {}
+
 class DummyArticle extends ArticleEntity {
   const DummyArticle({
     String? id,
@@ -33,7 +38,6 @@ class DummyArticle extends ArticleEntity {
     String? title,
     String? description,
     String? url,
-    String? urlToImage,
     String? publishedAt,
     String? content,
   }) : super(
@@ -42,7 +46,6 @@ class DummyArticle extends ArticleEntity {
           title: title,
           description: description,
           url: url,
-          urlToImage: urlToImage,
           publishedAt: publishedAt,
           content: content,
         );
@@ -51,11 +54,13 @@ class DummyArticle extends ArticleEntity {
 void main() {
   late MockRemoteArticlesBloc mockRemoteArticlesBloc;
   late MockLocalArticlesBloc mockLocalArticlesBloc;
+  late MockLoginBloc mockLoginBloc;
   late GetIt getIt;
 
   setUp(() {
     mockRemoteArticlesBloc = MockRemoteArticlesBloc();
     mockLocalArticlesBloc = MockLocalArticlesBloc();
+    mockLoginBloc = MockLoginBloc();
     getIt = GetIt.instance;
     if (getIt.isRegistered<RemoteArticlesBloc>()) {
       getIt.unregister<RemoteArticlesBloc>();
@@ -63,8 +68,12 @@ void main() {
     if (getIt.isRegistered<LocalArticleBloc>()) {
       getIt.unregister<LocalArticleBloc>();
     }
+    if (getIt.isRegistered<LoginBloc>()) {
+      getIt.unregister<LoginBloc>();
+    }
     getIt.registerSingleton<RemoteArticlesBloc>(mockRemoteArticlesBloc);
     getIt.registerSingleton<LocalArticleBloc>(mockLocalArticlesBloc);
+    getIt.registerSingleton<LoginBloc>(mockLoginBloc);
   });
 
   tearDown(() {
@@ -74,6 +83,9 @@ void main() {
     if (getIt.isRegistered<LocalArticleBloc>()) {
       getIt.unregister<LocalArticleBloc>();
     }
+    if (getIt.isRegistered<LoginBloc>()) {
+      getIt.unregister<LoginBloc>();
+    }
   });
 
   group('ArticlesList', () {
@@ -81,13 +93,13 @@ void main() {
       const DummyArticle(
           id: '1',
           title: 'Article 1',
-          urlToImage: 'url1',
-          publishedAt: 'time1'),
+          url: 'https://example.com/1',
+          publishedAt: '2023-10-27T10:00:00Z'),
       const DummyArticle(
           id: '2',
           title: 'Article 2',
-          urlToImage: 'url2',
-          publishedAt: 'time2'),
+          url: 'https://example.com/2',
+          publishedAt: '2023-10-27T11:00:00Z'),
     ];
 
     testWidgets('renders correct number of ArticleWidgets',
@@ -152,20 +164,103 @@ void main() {
       expect(find.byIcon(Icons.close), findsNothing);
     });
 
-    testWidgets('navigates to ArticleDetails when an article is pressed',
+    testWidgets('renders empty list when articles is empty',
         (WidgetTester tester) async {
-      const dummyArticle = DummyArticle(
-        id: '1',
-        title: 'Article 1',
-        urlToImage: 'url1',
-        publishedAt: 'time1',
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ArticlesList(
+              articles: [],
+            ),
+          ),
+        ),
       );
 
-      when(() => mockRemoteArticlesBloc.state)
-          .thenReturn(const RemoteArticlesDone(articles: [dummyArticle]));
+      expect(find.byType(ArticleWidget), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
 
-      when(() => mockLocalArticlesBloc.state)
-          .thenReturn(const LocalArticleEmpty());
+    testWidgets('shows CircularProgressIndicator when isLast is false',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ArticlesList(
+              articles: mockArticles,
+              isLast: false,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(ArticleWidget), findsNWidgets(mockArticles.length - 1));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('does not show CircularProgressIndicator when isLast is true',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ArticlesList(
+              articles: mockArticles,
+              isLast: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(ArticleWidget), findsNWidgets(mockArticles.length));
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('uses the provided ScrollController',
+        (WidgetTester tester) async {
+      final ScrollController controller = ScrollController();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ArticlesList(
+              articles: mockArticles,
+              scrollController: controller,
+            ),
+          ),
+        ),
+      );
+
+      final ListView listView = tester.widget(find.byType(ListView));
+      expect(listView.controller, equals(controller));
+    });
+
+    testWidgets('has correct physics and cacheExtent',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ArticlesList(
+              articles: mockArticles,
+            ),
+          ),
+        ),
+      );
+
+      final ListView listView = tester.widget(find.byType(ListView));
+      expect(listView.physics, isA<AlwaysScrollableScrollPhysics>());
+      expect(listView.cacheExtent, equals(500.0));
+    });
+
+    testWidgets('navigates to ArticleDetails when an article is pressed',
+        (WidgetTester tester) async {
+      final dummyArticle = mockArticles.first;
+
+      when(() => mockRemoteArticlesBloc.state).thenReturn(
+          RemoteArticlesDone(articles: [dummyArticle], totalPages: 1));
+
+      when(() => mockLocalArticlesBloc.state).thenReturn(
+        const LocalArticlesDone(articles: [], isSaved: false),
+      );
+
+      when(() => mockLoginBloc.state).thenReturn(LoginInitial());
 
       await tester.pumpWidget(
         MultiBlocProvider(
@@ -173,8 +268,11 @@ void main() {
             BlocProvider<RemoteArticlesBloc>.value(
                 value: mockRemoteArticlesBloc),
             BlocProvider<LocalArticleBloc>.value(value: mockLocalArticlesBloc),
+            BlocProvider<LoginBloc>.value(value: mockLoginBloc),
           ],
           child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             routerConfig: GoRouter(
               initialLocation: Paths.dailyNews.path,
               routes: AppRoutes.list,
@@ -183,11 +281,14 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Article 1'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.byIcon(Ionicons.bookmark), findsOneWidget);
+      await tester.tap(find.text('Article 1'));
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+
+      expect(find.byIcon(Ionicons.bookmark_outline), findsOneWidget);
     });
   });
 }

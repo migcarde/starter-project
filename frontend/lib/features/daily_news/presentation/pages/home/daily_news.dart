@@ -11,17 +11,17 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/wid
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/articles_list.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 
 class DailyNews extends StatelessWidget {
   const DailyNews({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Add default theme
     return BlocProvider(
       create: (context) => sl<RemoteArticlesBloc>()..add(const GetArticles()),
       child: BaseScaffold(
-        text: 'Daily News',
+        text: AppLocalizations.of(context).daily_news,
         actions: [
           IconButton(
             onPressed: () => context.pushNamed(Paths.savedArticles.name),
@@ -73,15 +73,14 @@ class _DailyNewsBodyState extends State<_DailyNewsBody> {
         builder: (context, state) => switch (state) {
           RemoteArticlesLoading() =>
             const Center(child: CupertinoActivityIndicator()),
-          RemoteArticlesError() => const Center(
-              child: Icon(Icons.refresh)), // TODO: Add a generic error widget
+          RemoteArticlesError() => const Center(child: Icon(Icons.refresh)),
           RemoteArticlesDone() => ArticlesList(
               scrollController: _scrollController,
               articles: state.articles ?? [],
               isLast: state.isLast,
             ),
           RemoteArticleEmpty() =>
-            const Center(child: Text('No articles found')),
+            Center(child: Text(AppLocalizations.of(context).no_articles_found)),
         },
       ),
     );

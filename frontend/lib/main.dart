@@ -5,6 +5,7 @@ import 'package:news_app_clean_architecture/config/routes/go_router_config.dart'
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
 import 'package:news_app_clean_architecture/firebase_options.dart';
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 import 'config/theme/app_themes.dart';
 import 'injection_container.dart';
 
@@ -24,8 +25,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -38,9 +37,12 @@ class _MyAppState extends State<MyApp> {
         ),
       ],
       child: MaterialApp.router(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('en'),
         debugShowCheckedModeBanner: false,
         theme: theme(),
-        routerConfig: GoRouterConfig(navigatorKey: _navigatorKey).routes,
+        routerConfig: sl<GoRouterConfig>().routes,
       ),
     );
   }

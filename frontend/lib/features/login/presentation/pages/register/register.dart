@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/core/constants/dimens.dart';
+import 'package:news_app_clean_architecture/core/extensions/context_extensions.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_scaffold.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/button/loading_button.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/text_field/base_text_field.dart';
@@ -32,6 +33,8 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = context.localizations;
+
     return BaseScaffold(
       body: BlocProvider<LoginBloc>.value(
         value: sl<LoginBloc>(),
@@ -46,20 +49,21 @@ class _RegisterViewState extends State<RegisterView> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // TODO: Add photo
                   BaseTextField(
                     controller: _nameController,
-                    hint: 'name',
+                    hint: localizations.name,
                     type: TextFieldType.outline,
-                    errorText: state.registerErrors.getNameError,
+                    errorText: state.registerErrors
+                        .getNameError(localizations: localizations),
                   ),
                   Padding(
                     padding: const EdgeInsetsDirectional.only(top: Dimens.m),
                     child: BaseTextField(
                       controller: _emailController,
-                      hint: 'email',
+                      hint: localizations.email,
                       type: TextFieldType.outline,
-                      errorText: state.registerErrors.getEmailError,
+                      errorText: state.registerErrors
+                          .getEmailError(localizations: localizations),
                     ),
                   ),
                   Padding(
@@ -68,17 +72,18 @@ class _RegisterViewState extends State<RegisterView> {
                     ),
                     child: BaseTextField(
                       controller: _passwordController,
-                      hint: 'password',
+                      hint: localizations.password,
                       textType: BaseTextFieldType.password,
                       type: TextFieldType.outline,
-                      errorText: state.registerErrors.getPasswordError,
+                      errorText: state.registerErrors
+                          .getPasswordError(localizations: localizations),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsetsDirectional.only(top: Dimens.l),
                     child: LoadingButton(
                       isLoading: state is LoginLoading,
-                      text: 'Register',
+                      text: localizations.register,
                       onTap: () {
                         context.read<LoginBloc>().add(
                               CreateUserRequested(

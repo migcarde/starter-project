@@ -27,7 +27,7 @@ dependencies:
   get_it: ^7.6.0
   
   #dateFormat
-  intl: ^0.18.1
+  intl: any
 
   #Database
   froom: ^6.0.0
@@ -54,6 +54,9 @@ dependencies:
   path: ^1.9.1
   flutter_svg: ^2.2.4
 
+  flutter_localizations:
+    sdk: flutter
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -71,6 +74,7 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+  generate: true
   fonts:
     - family: Muli
       fonts:

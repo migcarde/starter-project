@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:markdown_editor_plus/widgets/markdown_auto_preview.dart';
 import 'package:news_app_clean_architecture/core/constants/dimens.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/text_field/text_field_type.dart';
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 
 class BaseMarkdownTextField extends StatefulWidget {
   const BaseMarkdownTextField({
@@ -80,7 +81,7 @@ class _BaseMarkdownTextFieldState extends State<BaseMarkdownTextField> {
               ),
             ),
           ),
-        const Text('*Tap on the text to start typing'),
+        Text(AppLocalizations.of(context).tap_to_start_typing),
       ],
     );
   }

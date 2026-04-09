@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:news_app_clean_architecture/config/routes/go_router_config.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_service.dart.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_service_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
@@ -85,6 +87,13 @@ Future<void> initializeDependencies() async {
       sl(),
       sl(),
       sl(),
+    ),
+  );
+
+  // Go router
+  sl.registerLazySingleton<GoRouterConfig>(
+    () => GoRouterConfig(
+      navigatorKey: GlobalKey<NavigatorState>(),
     ),
   );
 }

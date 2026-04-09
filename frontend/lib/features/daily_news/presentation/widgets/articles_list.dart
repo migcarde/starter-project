@@ -22,12 +22,10 @@ class ArticlesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Add a loader at the end of the list
-    // TODO: Add lazy loading for more articles at the end
-
     return ListView.builder(
       controller: scrollController,
       itemCount: articles.length,
+      physics: const AlwaysScrollableScrollPhysics(),
       cacheExtent: 500,
       itemBuilder: (context, index) {
         if (index == articles.length - 1 && !isLast) {

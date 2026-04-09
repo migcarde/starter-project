@@ -1,3 +1,5 @@
+import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
+
 enum RegisterFieldError {
   emailRequired,
   emailNotValid,
@@ -7,46 +9,60 @@ enum RegisterFieldError {
   passwordNotValid,
   unknown;
 
-  String get message => switch (this) {
-        RegisterFieldError.emailRequired => 'Email is required',
-        RegisterFieldError.emailNotValid => 'Email is not valid',
-        RegisterFieldError.emailAlreadyRegistered => 'Email already registered',
-        RegisterFieldError.nameRequired => 'Name is required',
-        RegisterFieldError.passwordRequired => 'Password is required',
-        RegisterFieldError.passwordNotValid => 'Password is not valid',
-        RegisterFieldError.unknown => 'Unknown error',
+  String getMessage({required AppLocalizations localizations}) =>
+      switch (this) {
+        RegisterFieldError.emailRequired =>
+          localizations.register_field_email_required,
+        RegisterFieldError.emailNotValid =>
+          localizations.register_field_email_not_valid,
+        RegisterFieldError.emailAlreadyRegistered =>
+          localizations.register_field_email_already_registered,
+        RegisterFieldError.nameRequired =>
+          localizations.register_field_name_required,
+        RegisterFieldError.passwordRequired =>
+          localizations.register_field_password_required,
+        RegisterFieldError.passwordNotValid =>
+          localizations.register_field_password_not_valid,
+        RegisterFieldError.unknown =>
+          localizations.register_field_unknown_error,
       };
 }
 
-extension LoginFieldsErrorExtensions on List<RegisterFieldError> {
-  String? get getEmailError {
+extension RegisterFieldsErrorExtensions on List<RegisterFieldError> {
+  String? getEmailError({required AppLocalizations localizations}) {
     if (contains(RegisterFieldError.emailRequired)) {
-      return RegisterFieldError.emailRequired.message;
+      return RegisterFieldError.emailRequired
+          .getMessage(localizations: localizations);
     }
     if (contains(RegisterFieldError.emailNotValid)) {
-      return RegisterFieldError.emailNotValid.message;
+      return RegisterFieldError.emailNotValid
+          .getMessage(localizations: localizations);
     }
     if (contains(RegisterFieldError.emailAlreadyRegistered)) {
-      return RegisterFieldError.emailAlreadyRegistered.message;
+      return RegisterFieldError.emailAlreadyRegistered
+          .getMessage(localizations: localizations);
     }
 
     return null;
   }
 
-  String? get getNameError {
+  String? getNameError({required AppLocalizations localizations}) {
     if (contains(RegisterFieldError.nameRequired)) {
-      return RegisterFieldError.nameRequired.message;
+      return RegisterFieldError.nameRequired
+          .getMessage(localizations: localizations);
     }
 
     return null;
   }
 
-  String? get getPasswordError {
+  String? getPasswordError({required AppLocalizations localizations}) {
     if (contains(RegisterFieldError.passwordRequired)) {
-      return RegisterFieldError.passwordRequired.message;
+      return RegisterFieldError.passwordRequired
+          .getMessage(localizations: localizations);
     }
     if (contains(RegisterFieldError.passwordNotValid)) {
-      return RegisterFieldError.passwordNotValid.message;
+      return RegisterFieldError.passwordNotValid
+          .getMessage(localizations: localizations);
     }
     return null;
   }

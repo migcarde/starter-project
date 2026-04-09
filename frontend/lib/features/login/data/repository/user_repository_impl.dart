@@ -49,7 +49,6 @@ class UserRepositoryImpl implements UserRepository {
     try {
       final userId = await _usersService.createCredentials(
           email: user.email, password: password);
-      // TODO: Add upload image
       await _usersService.createUser(
         UserModel.fromEntity(
           user.copyWith(

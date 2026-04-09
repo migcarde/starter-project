@@ -8,6 +8,7 @@ class BaseScaffold extends StatelessWidget {
     this.actions,
     this.leading,
     this.floatingActionButton,
+    this.onTapGoBack,
   });
 
   final String? text;
@@ -15,22 +16,28 @@ class BaseScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final FloatingActionButton? floatingActionButton;
+  final VoidCallback? onTapGoBack;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          text ?? '',
-          style: const TextStyle(
-            color: Colors.black,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        onTapGoBack?.call();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            text ?? '',
+            style: const TextStyle(
+              color: Colors.black,
+            ),
           ),
+          leading: leading,
+          actions: actions,
         ),
-        leading: leading,
-        actions: actions,
+        body: body,
+        floatingActionButton: floatingActionButton,
       ),
-      body: body,
-      floatingActionButton: floatingActionButton,
     );
   }
 
@@ -44,12 +51,13 @@ class BaseScaffold extends StatelessWidget {
       BaseScaffold(
         text: text,
         actions: actions,
+        onTapGoBack: () => onTapGoBack != null ? onTapGoBack() : null,
         leading: Builder(
           builder: (context) => GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => onTapGoBack != null
-                ? onTapGoBack()
-                : Navigator.of(context).pop(),
+            onTap: () {
+              Navigator.of(context).pop();
+            },
             child: const Icon(Icons.chevron_left, color: Colors.black),
           ),
         ),

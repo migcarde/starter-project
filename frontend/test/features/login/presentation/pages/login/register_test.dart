@@ -2,34 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:news_app_clean_architecture/config/routes/paths.dart';
 import 'package:news_app_clean_architecture/features/login/domain/entities/user.dart';
 import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_bloc.dart';
-import 'package:news_app_clean_architecture/features/login/presentation/bloc/login_field_error.dart';
-import 'package:news_app_clean_architecture/features/login/presentation/pages/login/login.dart';
+import 'package:news_app_clean_architecture/features/login/presentation/bloc/register_field_error.dart';
+import 'package:news_app_clean_architecture/features/login/presentation/pages/register/register.dart';
 import 'package:news_app_clean_architecture/l10n/app_localizations.dart';
 import 'package:news_app_clean_architecture/l10n/app_localizations_en.dart';
 
 class MockLoginBloc extends MockBloc<LoginEvent, LoginState>
     implements LoginBloc {}
 
-class MockGoRouter extends Mock implements GoRouter {}
-
 void main() {
   late MockLoginBloc mockLoginBloc;
-  late MockGoRouter mockGoRouter;
   late GetIt getIt;
 
   setUpAll(() {
     registerFallbackValue(LoginInitial());
-    registerFallbackValue(SignOutRequested());
+    registerFallbackValue(
+      CreateUserRequested(
+        user: const UserEntity(id: '', email: '', name: ''),
+        password: '',
+      ),
+    );
   });
 
   setUp(() {
     mockLoginBloc = MockLoginBloc();
-    mockGoRouter = MockGoRouter();
     getIt = GetIt.instance;
     if (getIt.isRegistered<LoginBloc>()) {
       getIt.unregister<LoginBloc>();
@@ -48,13 +47,10 @@ void main() {
   });
 
   Widget makeTestableWidget() {
-    return MaterialApp(
+    return const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: InheritedGoRouter(
-        goRouter: mockGoRouter,
-        child: const LoginView(),
-      ),
+      home: RegisterView(),
     );
   }
 
@@ -65,65 +61,60 @@ void main() {
     );
   }
 
-  group('LoginView', () {
-    testWidgets('renders email and password fields and login button',
+  group('RegisterView', () {
+    testWidgets('renders name, email and password fields and register button',
         (WidgetTester tester) async {
       await tester.pumpWidget(makeTestableWidget());
 
+      expect(hintField(AppLocalizationsEn().name), findsOneWidget);
       expect(hintField(AppLocalizationsEn().email), findsOneWidget);
       expect(hintField(AppLocalizationsEn().password), findsOneWidget);
-      expect(find.text(AppLocalizationsEn().login), findsOneWidget);
       expect(find.text(AppLocalizationsEn().register), findsOneWidget);
     });
 
-    testWidgets('adds SignInWithEmailAndPasswordRequested when login tapped',
+    testWidgets('adds CreateUserRequested when register button is tapped',
         (WidgetTester tester) async {
       await tester.pumpWidget(makeTestableWidget());
 
+      await tester.enterText(hintField(AppLocalizationsEn().name), 'Test User');
       await tester.enterText(
           hintField(AppLocalizationsEn().email), 'test@test.com');
       await tester.enterText(
           hintField(AppLocalizationsEn().password), 'SuperSecret123!');
-      await tester.tap(find.text(AppLocalizationsEn().login));
+      await tester.tap(find.text(AppLocalizationsEn().register));
       await tester.pump();
 
       verify(() => mockLoginBloc.add(
-            SignInWithEmailAndPasswordRequested(
-              email: 'test@test.com',
+            CreateUserRequested(
+              user: const UserEntity(
+                id: '',
+                email: 'test@test.com',
+                name: 'Test User',
+              ),
               password: 'SuperSecret123!',
             ),
           )).called(1);
     });
 
-    testWidgets('navigates to Register page when register button is tapped',
-        (WidgetTester tester) async {
-      when(() => mockGoRouter.pushNamed(Paths.register.name))
-          .thenAnswer((_) async => null);
-
-      await tester.pumpWidget(makeTestableWidget());
-
-      await tester.tap(find.text(AppLocalizationsEn().register));
-      await tester.pump();
-
-      verify(() => mockGoRouter.pushNamed(Paths.register.name)).called(1);
-    });
-
-    testWidgets('shows validation error text for email and password fields',
+    testWidgets(
+        'shows validation error text for name, email and password fields',
         (WidgetTester tester) async {
       when(() => mockLoginBloc.state).thenReturn(
         const NotLoggedIn(
-          loginErrors: [
-            LoginFieldError.emailRequired,
-            LoginFieldError.passwordRequired,
+          registerErrors: [
+            RegisterFieldError.nameRequired,
+            RegisterFieldError.emailRequired,
+            RegisterFieldError.passwordRequired,
           ],
         ),
       );
       when(() => mockLoginBloc.stream).thenAnswer(
         (_) => Stream<LoginState>.value(
           const NotLoggedIn(
-            loginErrors: [
-              LoginFieldError.emailRequired,
-              LoginFieldError.passwordRequired,
+            registerErrors: [
+              RegisterFieldError.nameRequired,
+              RegisterFieldError.emailRequired,
+              RegisterFieldError.passwordRequired,
             ],
           ),
         ),
@@ -131,13 +122,16 @@ void main() {
 
       await tester.pumpWidget(makeTestableWidget());
 
-      expect(find.text(AppLocalizationsEn().login_field_email_required),
+      expect(find.text(AppLocalizationsEn().register_field_name_required),
           findsOneWidget);
-      expect(find.text(AppLocalizationsEn().login_field_password_required),
+      expect(find.text(AppLocalizationsEn().register_field_email_required),
+          findsOneWidget);
+      expect(find.text(AppLocalizationsEn().register_field_password_required),
           findsOneWidget);
     });
 
-    testWidgets('shows loading indicator in login button when state is LoginLoading',
+    testWidgets(
+        'shows loading indicator in register button when state is LoginLoading',
         (WidgetTester tester) async {
       when(() => mockLoginBloc.state).thenReturn(const LoginLoading());
       when(() => mockLoginBloc.stream)
@@ -146,19 +140,6 @@ void main() {
       await tester.pumpWidget(makeTestableWidget());
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-
-    testWidgets('shows login error message when state is LoginError',
-        (WidgetTester tester) async {
-      when(() => mockLoginBloc.state)
-          .thenReturn(const LoginError(message: 'Something broke'));
-      when(() => mockLoginBloc.stream).thenAnswer(
-        (_) => Stream<LoginState>.value(const LoginError(message: 'Something broke')),
-      );
-
-      await tester.pumpWidget(makeTestableWidget());
-
-      expect(find.text(AppLocalizationsEn().something_was_wrong), findsOneWidget);
     });
 
     testWidgets('password field toggles visibility when suffix icon is tapped',
@@ -180,38 +161,6 @@ void main() {
 
       passwordField = tester.widget<TextField>(passwordFieldFinder);
       expect(passwordField.obscureText, isTrue);
-    });
-
-    testWidgets('renders login form in LoggedIn state',
-        (WidgetTester tester) async {
-      when(() => mockLoginBloc.state).thenReturn(
-        const LoggedIn(
-          user: UserEntity(
-            id: '1',
-            email: 'test@test.com',
-            name: 'Test User',
-            profilePictureUrl: '',
-          ),
-        ),
-      );
-      when(() => mockLoginBloc.stream).thenAnswer(
-        (_) => Stream<LoginState>.value(
-          const LoggedIn(
-            user: UserEntity(
-              id: '1',
-              email: 'test@test.com',
-              name: 'Test User',
-              profilePictureUrl: '',
-            ),
-          ),
-        ),
-      );
-
-      await tester.pumpWidget(makeTestableWidget());
-
-      expect(hintField(AppLocalizationsEn().email), findsOneWidget);
-      expect(hintField(AppLocalizationsEn().password), findsOneWidget);
-      expect(find.text(AppLocalizationsEn().login), findsOneWidget);
     });
   });
 }

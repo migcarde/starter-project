@@ -4,90 +4,83 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/entities/
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/base_network_image.dart';
 
-// Create a dummy ArticleEntity for testing
-class DummyArticle extends ArticleEntity {
-  const DummyArticle({
-    int? id,
-    String? author,
-    String? title,
-    String? description,
-    String? url,
-    String? urlToImage,
-    String? publishedAt,
-    String? content,
-  }) : super(
-          id: id,
-          author: author,
-          title: title,
-          description: description,
-          url: url,
-          urlToImage: urlToImage,
-          publishedAt: publishedAt,
-          content: content,
-        );
-}
-
 void main() {
-  group('ArticleWidget', () {
-    const testArticle = DummyArticle(
-      id: 1,
+  group('ArticleWidget Tests', () {
+    const testArticle = ArticleEntity(
+      id: '1',
       title: 'Test Title',
       description: 'Test Description',
-      urlToImage: 'https://example.com/image.jpg',
-      publishedAt: '2023-10-10',
+      url: 'https://example.com/image.jpg',
+      publishedAt: '2023-10-10T00:00:00Z',
     );
 
-    testWidgets('renders all details correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ArticleWidget(
-              article: testArticle,
-              isRemovable: false,
-              onRemove: (article) {},
-              onArticlePressed: (article) {},
-            ),
+    Widget createWidgetUnderTest({
+      required ArticleEntity article,
+      bool isRemovable = false,
+      void Function(ArticleEntity)? onRemove,
+      void Function(ArticleEntity)? onArticlePressed,
+    }) {
+      return MaterialApp(
+        home: Scaffold(
+          body: ArticleWidget(
+            article: article,
+            isRemovable: isRemovable,
+            onRemove: onRemove ?? (_) {},
+            onArticlePressed: onArticlePressed ?? (_) {},
           ),
         ),
       );
+    }
 
-      // Verify title is rendered
+    testWidgets('Should render article details correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(article: testArticle));
+
       expect(find.text('Test Title'), findsOneWidget);
-
-      // Verify description is rendered
       expect(find.text('Test Description'), findsOneWidget);
 
-      // Verify date is rendered
-      expect(find.text('2023-10-10'), findsOneWidget);
+      expect(find.text('10/10/2023'), findsOneWidget);
 
-      // Verify image wrapper is rendered
-      expect(find.byType(BaseNetworkImage), findsOneWidget);
+      final imageFinder = find.byType(BaseNetworkImage);
+      expect(imageFinder, findsOneWidget);
+      final imageWidget = tester.widget<BaseNetworkImage>(imageFinder);
+      expect(imageWidget.imageUrl, testArticle.url);
 
-      // Because isRemovable is false, close icon shouldn't be rendered
       expect(find.byIcon(Icons.close), findsNothing);
     });
 
-    testWidgets('calls onArticlePressed when tapped', (WidgetTester tester) async {
+    testWidgets('Should handle null title and description by showing empty strings', (WidgetTester tester) async {
+      const nullArticle = ArticleEntity(
+        id: '2',
+        title: null,
+        description: null,
+        url: 'https://example.com/image.jpg',
+        publishedAt: '2023-10-10T00:00:00Z',
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest(article: nullArticle));
+
+      expect(find.byType(ArticleWidget), findsOneWidget);
+      
+      final textWidgets = tester.widgetList<Text>(find.byType(Text));
+      
+      expect(textWidgets.length, greaterThanOrEqualTo(2));
+      expect(textWidgets.any((t) => t.data == ''), isTrue);
+    });
+
+    testWidgets('Should call onArticlePressed when the tile is tapped', (WidgetTester tester) async {
       bool pressed = false;
       ArticleEntity? pressedArticle;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ArticleWidget(
-              article: testArticle,
-              isRemovable: false,
-              onRemove: (article) {},
-              onArticlePressed: (article) {
-                pressed = true;
-                pressedArticle = article;
-              },
-            ),
-          ),
+        createWidgetUnderTest(
+          article: testArticle,
+          onArticlePressed: (article) {
+            pressed = true;
+            pressedArticle = article;
+          },
         ),
       );
 
-      // Tap on the widget itself (GestureDetector wrapping the entire tile)
       await tester.tap(find.byType(ArticleWidget));
       await tester.pump();
 
@@ -95,36 +88,50 @@ void main() {
       expect(pressedArticle, testArticle);
     });
 
-    testWidgets('shows remove button and calls onRemove when isRemovable is true', (WidgetTester tester) async {
+    testWidgets('Should show remove button and call onRemove when isRemovable is true', (WidgetTester tester) async {
       bool removed = false;
       ArticleEntity? removedArticle;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ArticleWidget(
-              article: testArticle,
-              isRemovable: true,
-              onRemove: (article) {
-                removed = true;
-                removedArticle = article;
-              },
-              onArticlePressed: (article) {},
-            ),
-          ),
+        createWidgetUnderTest(
+          article: testArticle,
+          isRemovable: true,
+          onRemove: (article) {
+            removed = true;
+            removedArticle = article;
+          },
         ),
       );
 
-      // Verify close icon is rendered when isRemovable is true
       final closeIconFinder = find.byIcon(Icons.close);
       expect(closeIconFinder, findsOneWidget);
 
-      // Tap on the close icon
       await tester.tap(closeIconFinder);
       await tester.pump();
 
       expect(removed, isTrue);
       expect(removedArticle, testArticle);
+    });
+
+    testWidgets('Should NOT show remove button when isRemovable is false', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          article: testArticle,
+          isRemovable: false,
+        ),
+      );
+
+      expect(find.byIcon(Icons.close), findsNothing);
+    });
+
+    testWidgets('Should verify BaseNetworkImage layout properties', (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(article: testArticle));
+
+      final imageFinder = find.byType(BaseNetworkImage);
+      final imageWidget = tester.widget<BaseNetworkImage>(imageFinder);
+      
+      expect(imageWidget.width, 800 / 3);
+      expect(imageWidget.height, double.maxFinite);
     });
   });
 }

@@ -8,7 +8,7 @@ abstract class LocalArticlesEvent extends Equatable {
   const LocalArticlesEvent({this.article});
 
   @override
-  List<Object> get props => [article!];
+  List<Object?> get props => [article];
 }
 
 class GetSavedArticles extends LocalArticlesEvent {
@@ -21,4 +21,17 @@ class RemoveArticle extends LocalArticlesEvent {
 
 class SaveArticle extends LocalArticlesEvent {
   const SaveArticle(ArticleEntity article) : super(article: article);
+}
+
+class GetSavedArticle extends LocalArticlesEvent {
+  final String id;
+
+  const GetSavedArticle(this.id);
+
+  @override
+  List<Object> get props => [id];
+}
+
+class ClearBookmark extends LocalArticlesEvent {
+  const ClearBookmark();
 }

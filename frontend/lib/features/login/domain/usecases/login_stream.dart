@@ -8,12 +8,5 @@ class LoginStreamUseCase {
 
   const LoginStreamUseCase(this._userRepository);
 
-  Stream<UserEntity?> call(NoParams params) {
-    // TODO: Replace with repository call
-    return Stream<UserEntity?>.value(const UserEntity(
-      id: 1,
-      email: 'test@test.com',
-    ));
-    return _userRepository.loginStream;
-  }
+  Stream<UserEntity?> call(NoParams params) => _userRepository.loginStream;
 }

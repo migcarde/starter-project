@@ -8,23 +8,32 @@ class ArticlesList extends StatelessWidget {
   const ArticlesList({
     super.key,
     required this.articles,
+    this.scrollController,
+    this.isLast = true,
     this.isRemovable = false,
     this.onRemove,
   });
 
-  final List<ArticleEntity> articles;
+  final ScrollController? scrollController;
   final bool isRemovable;
+  final bool isLast;
+  final List<ArticleEntity> articles;
   final Function(ArticleEntity)? onRemove;
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Add a loader at the end of the list
-    // TODO: Add lazy loading for more articles at the end
-
     return ListView.builder(
+      controller: scrollController,
       itemCount: articles.length,
+      physics: const AlwaysScrollableScrollPhysics(),
       cacheExtent: 500,
       itemBuilder: (context, index) {
+        if (index == articles.length - 1 && !isLast) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
         return RepaintBoundary(
           child: ArticleWidget(
             article: articles[index],

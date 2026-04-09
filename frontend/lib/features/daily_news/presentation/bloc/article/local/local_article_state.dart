@@ -8,11 +8,13 @@ sealed class LocalArticlesState extends Equatable {
   final List<ArticleEntity>? articles;
   final LocalDatabaseException? error;
   final LocalArticleStatus status;
+  final bool? isSaved;
 
   const LocalArticlesState({
     this.articles,
     this.error,
     this.status = LocalArticleStatus.none,
+    this.isSaved,
   });
 
   @override
@@ -20,6 +22,7 @@ sealed class LocalArticlesState extends Equatable {
         articles,
         error,
         status,
+        isSaved,
       ];
 }
 
@@ -31,15 +34,28 @@ class LocalArticlesDone extends LocalArticlesState {
   const LocalArticlesDone({
     required List<ArticleEntity> articles,
     LocalArticleStatus status = LocalArticleStatus.none,
-  }) : super(articles: articles, status: status);
+    bool? isSaved,
+  }) : super(
+          articles: articles,
+          status: status,
+          isSaved: isSaved,
+        );
 
   LocalArticlesDone copyWith({
     List<ArticleEntity>? articles,
     LocalArticleStatus? status,
+    bool? isSaved,
   }) =>
       LocalArticlesDone(
         articles: articles ?? this.articles!,
         status: status ?? this.status,
+        isSaved: isSaved ?? this.isSaved,
+      );
+
+  LocalArticlesDone clearSave() => LocalArticlesDone(
+        articles: articles ?? [],
+        status: status,
+        isSaved: null,
       );
 }
 

@@ -3,7 +3,8 @@ enum Paths {
   savedArticles('/saved-articles'),
   articleDetails('/article-details'),
   dailyNews('/daily-news'),
-  login('/login');
+  login('/login'),
+  register('/register');
 
   final String path;
 

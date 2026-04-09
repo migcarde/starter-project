@@ -29,8 +29,14 @@ final class RemoteArticlesLoading extends RemoteArticlesState {
 }
 
 final class RemoteArticlesDone extends RemoteArticlesState {
+  final int page;
+  final int totalPages;
+  final int? total;
   const RemoteArticlesDone({
     required List<ArticleEntity> articles,
+    this.page = 0,
+    this.totalPages = 0,
+    this.total,
     RemoteArticleStatus status = RemoteArticleStatus.none,
   }) : super(articles: articles, status: status);
 
@@ -38,7 +44,27 @@ final class RemoteArticlesDone extends RemoteArticlesState {
   List<Object?> get props => [
         articles,
         status,
+        page,
+        totalPages,
+        total,
       ];
+
+  RemoteArticlesDone copyWith({
+    List<ArticleEntity>? articles,
+    int? page,
+    int? totalPages,
+    int? total,
+    RemoteArticleStatus? status,
+  }) =>
+      RemoteArticlesDone(
+        articles: articles ?? this.articles!,
+        page: page ?? this.page,
+        totalPages: totalPages ?? this.totalPages,
+        total: total ?? this.total,
+        status: status ?? this.status,
+      );
+
+  bool get isLast => (page + 1) >= totalPages;
 }
 
 final class RemoteArticlesError extends RemoteArticlesState {

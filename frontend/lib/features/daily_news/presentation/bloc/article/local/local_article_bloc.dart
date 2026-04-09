@@ -1,32 +1,42 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/core/errors/local_database_exception.dart';
 import 'package:news_app_clean_architecture/core/resources/data_state.dart';
 import 'package:news_app_clean_architecture/core/usecase/usecase.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_articles.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/remove_article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/save_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_state.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_status.dart';
 
-import '../../../../domain/usecases/get_saved_articles.dart';
-import '../../../../domain/usecases/remove_article.dart';
-import '../../../../domain/usecases/save_article.dart';
-
 class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
-  final GetSavedArticlesUseCase _getSavedArticleUseCase;
+  final GetSavedArticlesUseCase _getSavedArticlesUseCase;
   final SaveArticleUseCase _saveArticleUseCase;
   final RemoveArticleUseCase _removeArticleUseCase;
+  final GetSavedArticleUseCase _getSavedArticleUseCase;
 
-  LocalArticleBloc(this._getSavedArticleUseCase, this._saveArticleUseCase,
-      this._removeArticleUseCase)
-      : super(const LocalArticlesLoading()) {
+  LocalArticleBloc(
+    this._getSavedArticlesUseCase,
+    this._saveArticleUseCase,
+    this._removeArticleUseCase,
+    this._getSavedArticleUseCase,
+  ) : super(const LocalArticlesLoading()) {
     on<GetSavedArticles>(onGetSavedArticles);
     on<RemoveArticle>(onRemoveArticle);
     on<SaveArticle>(onSaveArticle);
+    on<GetSavedArticle>(onGetSavedArticle);
+    on<ClearBookmark>(_onClearBookmark);
+
+    add(const GetSavedArticles());
   }
 
   void onGetSavedArticles(
       GetSavedArticles event, Emitter<LocalArticlesState> emit) async {
-    final dataState = await _getSavedArticleUseCase(NoParams());
+    final dataState = await _getSavedArticlesUseCase(NoParams());
 
     if (dataState is DataSuccess) {
       _emitData(
@@ -42,7 +52,7 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
   void onRemoveArticle(
       RemoveArticle removeArticle, Emitter<LocalArticlesState> emit) async {
     await _removeArticleUseCase(removeArticle.article!);
-    final articles = await _getSavedArticleUseCase(NoParams());
+    final articles = await _getSavedArticlesUseCase(NoParams());
 
     if (articles is DataSuccess) {
       _emitData(
@@ -65,13 +75,14 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
   void onSaveArticle(
       SaveArticle saveArticle, Emitter<LocalArticlesState> emit) async {
     await _saveArticleUseCase(saveArticle.article!);
-    final articles = await _getSavedArticleUseCase(NoParams());
+    final articles = await _getSavedArticlesUseCase(NoParams());
 
     if (articles is DataSuccess) {
       _emitData(
         emit: emit,
         articles: articles.data ?? [],
         status: LocalArticleStatus.savedSuccess,
+        isSaved: true,
       );
       _clearSnackbar(emit: emit, state: state);
     } else if (state is LocalArticlesDone) {
@@ -89,6 +100,7 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
     required Emitter<LocalArticlesState> emit,
     required List<ArticleEntity> articles,
     LocalArticleStatus status = LocalArticleStatus.none,
+    bool isSaved = false,
   }) =>
       emit(
         articles.isEmpty
@@ -98,6 +110,7 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
             : LocalArticlesDone(
                 articles: articles,
                 status: status,
+                isSaved: isSaved,
               ),
       );
 
@@ -131,4 +144,30 @@ class LocalArticleBloc extends Bloc<LocalArticlesEvent, LocalArticlesState> {
           status: LocalArticleStatus.genericError,
         ),
       );
+
+  Future<void> onGetSavedArticle(
+      GetSavedArticle event, Emitter<LocalArticlesState> emit) async {
+    if (state is LocalArticlesDone) {
+      final currentState = state as LocalArticlesDone;
+      emit(currentState.clearSave());
+      final dataState = await _getSavedArticleUseCase(event.id);
+
+      if (dataState is DataSuccess) {
+        emit(
+          LocalArticlesDone(
+            articles: state.articles ?? [],
+            isSaved: dataState.data != null,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _onClearBookmark(
+      ClearBookmark event, Emitter<LocalArticlesState> emit) async {
+    if (state is LocalArticlesDone) {
+      final currentState = state as LocalArticlesDone;
+      emit(currentState.clearSave());
+    }
+  }
 }

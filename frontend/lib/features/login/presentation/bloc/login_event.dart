@@ -8,6 +8,16 @@ final class StartWatchingUser extends LoginEvent {
   List<Object?> get props => [];
 }
 
+final class CreateUserRequested extends LoginEvent {
+  final UserEntity user;
+  final String password;
+
+  CreateUserRequested({required this.user, required this.password});
+
+  @override
+  List<Object?> get props => [user, password];
+}
+
 final class SignInWithEmailAndPasswordRequested extends LoginEvent {
   final String email;
   final String password;

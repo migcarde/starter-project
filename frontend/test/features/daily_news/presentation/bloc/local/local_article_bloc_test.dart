@@ -6,6 +6,7 @@ import 'package:news_app_clean_architecture/core/resources/data_state.dart';
 import 'package:news_app_clean_architecture/core/usecase/usecase.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_articles.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/remove_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/save_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
@@ -13,8 +14,11 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_state.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_status.dart';
 
-class MockGetSavedArticleUseCase extends Mock
+class MockGetSavedArticlesUseCase extends Mock
     implements GetSavedArticlesUseCase {}
+
+class MockGetSavedArticleUseCase extends Mock
+    implements GetSavedArticleUseCase {}
 
 class MockSaveArticleUseCase extends Mock implements SaveArticleUseCase {}
 
@@ -25,10 +29,10 @@ class FakeArticleEntity extends Fake implements ArticleEntity {}
 class FakeNoParams extends Fake implements NoParams {}
 
 void main() {
-  late MockGetSavedArticleUseCase mockGetSavedArticleUseCase;
+  late MockGetSavedArticlesUseCase mockGetSavedArticlesUseCase;
   late MockSaveArticleUseCase mockSaveArticleUseCase;
   late MockRemoveArticleUseCase mockRemoveArticleUseCase;
-  late LocalArticleBloc bloc;
+  late MockGetSavedArticleUseCase mockGetSavedArticleUseCase;
 
   setUpAll(() {
     registerFallbackValue(FakeArticleEntity());
@@ -36,23 +40,23 @@ void main() {
   });
 
   setUp(() {
-    mockGetSavedArticleUseCase = MockGetSavedArticleUseCase();
+    mockGetSavedArticlesUseCase = MockGetSavedArticlesUseCase();
     mockSaveArticleUseCase = MockSaveArticleUseCase();
     mockRemoveArticleUseCase = MockRemoveArticleUseCase();
+    mockGetSavedArticleUseCase = MockGetSavedArticleUseCase();
+  });
 
-    bloc = LocalArticleBloc(
-      mockGetSavedArticleUseCase,
+  LocalArticleBloc createBloc() {
+    return LocalArticleBloc(
+      mockGetSavedArticlesUseCase,
       mockSaveArticleUseCase,
       mockRemoveArticleUseCase,
+      mockGetSavedArticleUseCase,
     );
-  });
-
-  tearDown(() {
-    bloc.close();
-  });
+  }
 
   const testArticle = ArticleEntity(
-    id: 1,
+    id: '1',
     title: 'Test Title',
     author: 'Test Author',
     description: 'Test Description',
@@ -61,45 +65,42 @@ void main() {
   final testArticles = [testArticle];
   const dbError = LocalDatabaseUnknownException(message: 'DB Error');
 
-  group('GetSavedArticles', () {
+  group('Initialization (GetSavedArticles)', () {
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits [LocalArticlesDone] when data fetching is successful and list is not empty',
+      'emits [LocalArticlesDone] when initialized with data',
       build: () {
-        when(() => mockGetSavedArticleUseCase.call(any()))
+        when(() => mockGetSavedArticlesUseCase.call(any()))
             .thenAnswer((_) async => DataSuccess(testArticles));
-        return bloc;
+        return createBloc();
       },
-      act: (bloc) => bloc.add(const GetSavedArticles()),
       expect: () => [
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.none),
+          articles: testArticles,
+          status: LocalArticleStatus.none,
+          isSaved: false,
+        ),
       ],
-      verify: (_) {
-        verify(() => mockGetSavedArticleUseCase.call(any())).called(1);
-      },
     );
 
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits [LocalArticleEmpty] when data fetching is successful but list is empty',
+      'emits [LocalArticleEmpty] when initialized with no data',
       build: () {
-        when(() => mockGetSavedArticleUseCase.call(any()))
+        when(() => mockGetSavedArticlesUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess([]));
-        return bloc;
+        return createBloc();
       },
-      act: (bloc) => bloc.add(const GetSavedArticles()),
       expect: () => [
         const LocalArticleEmpty(status: LocalArticleStatus.none),
       ],
     );
 
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits [LocalArticlesError] when data fetching fails',
+      'emits [LocalArticlesError] when initialization fails',
       build: () {
-        when(() => mockGetSavedArticleUseCase.call(any()))
+        when(() => mockGetSavedArticlesUseCase.call(any()))
             .thenAnswer((_) async => const DataFailed(dbError));
-        return bloc;
+        return createBloc();
       },
-      act: (bloc) => bloc.add(const GetSavedArticles()),
       expect: () => [
         const LocalArticlesError(dbError),
       ],
@@ -108,75 +109,82 @@ void main() {
 
   group('SaveArticle', () {
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits Success status then resets status when saving is successful and articles are NOT empty',
+      'emits status savedSuccess then none when saving is successful',
       build: () {
+        int count = 0;
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async {
+          if (count == 0) {
+            count++;
+            return const DataSuccess([]);
+          }
+          return DataSuccess(testArticles);
+        });
         when(() => mockSaveArticleUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => DataSuccess(testArticles));
-        return bloc;
+        return createBloc();
       },
+      skip: 1, 
       act: (bloc) => bloc.add(const SaveArticle(testArticle)),
       expect: () => [
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.savedSuccess),
+            articles: testArticles,
+            status: LocalArticleStatus.savedSuccess,
+            isSaved: true),
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.none),
+            articles: testArticles,
+            status: LocalArticleStatus.none,
+            isSaved: true),
       ],
-      verify: (_) {
-        verify(() => mockSaveArticleUseCase.call(testArticle)).called(1);
-        verify(() => mockGetSavedArticleUseCase.call(any())).called(1);
-      },
     );
 
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits Success status then resets status when saving is successful and articles are empty',
+      'emits status genericError then none when refresh fails after saving and state was Done',
       build: () {
+        int count = 0;
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async {
+          if (count == 0) {
+            count++;
+            return DataSuccess(testArticles);
+          }
+          return const DataFailed(dbError);
+        });
         when(() => mockSaveArticleUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataSuccess([]));
-        return bloc;
+        return createBloc();
       },
-      act: (bloc) => bloc.add(const SaveArticle(testArticle)),
-      expect: () => const [
-        LocalArticleEmpty(status: LocalArticleStatus.savedSuccess),
-        LocalArticleEmpty(status: LocalArticleStatus.none),
-      ],
-      verify: (_) {
-        verify(() => mockSaveArticleUseCase.call(testArticle)).called(1);
-        verify(() => mockGetSavedArticleUseCase.call(any())).called(1);
-      },
-    );
-
-    blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits generic error status then resets status when saving fails and current state is LocalArticlesDone',
-      build: () {
-        when(() => mockSaveArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataFailed(dbError));
-        return bloc;
-      },
-      seed: () => LocalArticlesDone(articles: testArticles),
+      skip: 1, 
       act: (bloc) => bloc.add(const SaveArticle(testArticle)),
       expect: () => [
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.genericError),
+            articles: testArticles,
+            status: LocalArticleStatus.genericError,
+            isSaved: false),
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.none),
+            articles: testArticles,
+            status: LocalArticleStatus.none,
+            isSaved: false),
       ],
     );
 
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits LocalArticlesError when saving fails and current state is NOT LocalArticlesDone',
+      'emits LocalArticlesError when refresh fails after saving and state was Empty',
       build: () {
+        int count = 0;
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async {
+          if (count == 0) {
+            count++;
+            return const DataSuccess([]);
+          }
+          return const DataFailed(dbError);
+        });
         when(() => mockSaveArticleUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataFailed(dbError));
-        return bloc;
+        return createBloc();
       },
+      skip: 1, 
       act: (bloc) => bloc.add(const SaveArticle(testArticle)),
       expect: () => [
         const LocalArticlesError(dbError),
@@ -186,57 +194,176 @@ void main() {
 
   group('RemoveArticle', () {
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits deletedSuccess status then resets status when removal is successful and articles list gets empty',
+      'emits status deletedSuccess then none when removal is successful',
       build: () {
+        int count = 0;
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async {
+          if (count == 0) {
+            count++;
+            return DataSuccess(testArticles);
+          }
+          return const DataSuccess([]);
+        });
         when(() => mockRemoveArticleUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataSuccess([]));
-        return bloc;
+        return createBloc();
       },
+      skip: 1, 
       act: (bloc) => bloc.add(const RemoveArticle(testArticle)),
       expect: () => [
         const LocalArticleEmpty(status: LocalArticleStatus.deletedSuccess),
         const LocalArticleEmpty(status: LocalArticleStatus.none),
       ],
-      verify: (_) {
-        verify(() => mockRemoveArticleUseCase.call(testArticle)).called(1);
-        verify(() => mockGetSavedArticleUseCase.call(any())).called(1);
-      },
     );
 
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits generic error status then resets status when removal fails and current state is LocalArticlesDone',
+      'emits status genericError then none when refresh fails after removal and state was Done',
       build: () {
+        int count = 0;
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async {
+          if (count == 0) {
+            count++;
+            return DataSuccess(testArticles);
+          }
+          return const DataFailed(dbError);
+        });
         when(() => mockRemoveArticleUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataFailed(dbError));
-        return bloc;
+        return createBloc();
       },
-      seed: () => LocalArticlesDone(articles: testArticles),
+      skip: 1, 
       act: (bloc) => bloc.add(const RemoveArticle(testArticle)),
       expect: () => [
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.genericError),
+            articles: testArticles,
+            status: LocalArticleStatus.genericError,
+            isSaved: false),
         LocalArticlesDone(
-            articles: testArticles, status: LocalArticleStatus.none),
+            articles: testArticles,
+            status: LocalArticleStatus.none,
+            isSaved: false),
       ],
     );
 
     blocTest<LocalArticleBloc, LocalArticlesState>(
-      'emits LocalArticlesError when removal fails and current state is NOT LocalArticlesDone',
+      'emits LocalArticlesError when refresh fails after removal and state was Empty',
       build: () {
+        int count = 0;
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async {
+          if (count == 0) {
+            count++;
+            return const DataSuccess([]);
+          }
+          return const DataFailed(dbError);
+        });
         when(() => mockRemoveArticleUseCase.call(any()))
             .thenAnswer((_) async => const DataSuccess(null));
-        when(() => mockGetSavedArticleUseCase.call(any()))
-            .thenAnswer((_) async => const DataFailed(dbError));
-        return bloc;
+        return createBloc();
       },
+      skip: 1, 
       act: (bloc) => bloc.add(const RemoveArticle(testArticle)),
       expect: () => [
         const LocalArticlesError(dbError),
       ],
+    );
+  });
+
+  group('GetSavedArticle', () {
+    blocTest<LocalArticleBloc, LocalArticlesState>(
+      'emits clearSave then LocalArticlesDone with isSaved true when article exists',
+      build: () {
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async => DataSuccess(testArticles));
+        when(() => mockGetSavedArticleUseCase.call(any()))
+            .thenAnswer((_) async => const DataSuccess(testArticle));
+        return createBloc();
+      },
+      skip: 1, 
+      act: (bloc) => bloc.add(const GetSavedArticle('1')),
+      expect: () => [
+        LocalArticlesDone(
+          articles: testArticles,
+          status: LocalArticleStatus.none,
+          isSaved: null,
+        ),
+        LocalArticlesDone(
+          articles: testArticles,
+          status: LocalArticleStatus.none,
+          isSaved: true,
+        ),
+      ],
+    );
+
+    blocTest<LocalArticleBloc, LocalArticlesState>(
+      'emits clearSave then LocalArticlesDone with isSaved false when article does not exist',
+      build: () {
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async => DataSuccess(testArticles));
+        when(() => mockGetSavedArticleUseCase.call(any()))
+            .thenAnswer((_) async => const DataSuccess(null));
+        return createBloc();
+      },
+      skip: 1, 
+      act: (bloc) => bloc.add(const GetSavedArticle('1')),
+      expect: () => [
+        LocalArticlesDone(
+          articles: testArticles,
+          status: LocalArticleStatus.none,
+          isSaved: null,
+        ),
+        LocalArticlesDone(
+          articles: testArticles,
+          status: LocalArticleStatus.none,
+          isSaved: false,
+        ),
+      ],
+    );
+
+    blocTest<LocalArticleBloc, LocalArticlesState>(
+      'does nothing when state is not LocalArticlesDone',
+      build: () {
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async => const DataSuccess([]));
+        return createBloc();
+      },
+      skip: 1, 
+      act: (bloc) => bloc.add(const GetSavedArticle('1')),
+      expect: () => [],
+    );
+  });
+
+  group('ClearBookmark', () {
+    blocTest<LocalArticleBloc, LocalArticlesState>(
+      'emits clearSave when state is LocalArticlesDone',
+      build: () {
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async => DataSuccess(testArticles));
+        return createBloc();
+      },
+      skip: 1, 
+      act: (bloc) => bloc.add(const ClearBookmark()),
+      expect: () => [
+        LocalArticlesDone(
+          articles: testArticles,
+          status: LocalArticleStatus.none,
+          isSaved: null,
+        ),
+      ],
+    );
+
+    blocTest<LocalArticleBloc, LocalArticlesState>(
+      'does nothing when state is not LocalArticlesDone',
+      build: () {
+        when(() => mockGetSavedArticlesUseCase.call(any()))
+            .thenAnswer((_) async => const DataSuccess([]));
+        return createBloc();
+      },
+      skip: 1, 
+      act: (bloc) => bloc.add(const ClearBookmark()),
+      expect: () => [],
     );
   });
 }

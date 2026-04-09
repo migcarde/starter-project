@@ -1,59 +1,8 @@
-import 'package:sqflite/sqflite.dart';
-
 sealed class LocalDatabaseException implements Exception {
   final String message;
   final dynamic originalError;
 
   const LocalDatabaseException({required this.message, this.originalError});
-
-  factory LocalDatabaseException.fromDatabaseException(DatabaseException e) {
-    if (e.isDatabaseClosedError()) {
-      return LocalDatabaseClosedException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isDuplicateColumnError()) {
-      return LocalDatabaseDuplicateColumnException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isNoSuchTableError()) {
-      return LocalDatabaseNoSuchTableException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isNotNullConstraintError()) {
-      return LocalDatabaseNotNullConstraintException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isOpenFailedError()) {
-      return LocalDatabaseOpenFailedException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isReadOnlyError()) {
-      return LocalDatabaseReadOnlyException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isSyntaxError()) {
-      return LocalDatabaseSyntaxException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else if (e.isUniqueConstraintError()) {
-      return LocalDatabaseUniqueConstraintException(
-        message: e.toString(),
-        originalError: e,
-      );
-    } else {
-      return LocalDatabaseUnknownException(
-        message: e.toString(),
-        originalError: e,
-      );
-    }
-  }
 }
 
 class LocalDatabaseClosedException extends LocalDatabaseException {

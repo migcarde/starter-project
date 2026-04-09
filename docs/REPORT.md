@@ -58,6 +58,10 @@ To improve this, I propose a division into two distinct packages:
 
 This project is configured for Android, the screenshots provided are from an Android device.
 
+### Apk
+
+![APK](../assets/apks/app-release.apk)
+
 ### Demo
 
 ![Demo](../assets/videos/demo.mp4)
